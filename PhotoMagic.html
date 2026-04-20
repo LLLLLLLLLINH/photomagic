@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PhotoMagic ✨</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#2563eb;--blue-dark:#1d4ed8;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+  --text:#111827;--text-soft:#6b7280;--border:#e5e7eb;--white:#ffffff;
+  --radius:16px;--radius-sm:10px
+}
+body{font-family:'DM Sans',sans-serif;background:#f0f4ff;color:var(--text);min-height:100vh;overflow-x:hidden;font-size:15px}
+
+/* ── UPLOAD ── */
+#upload-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:20px;text-align:center}
+.logo{font-size:30px;font-weight:700;letter-spacing:-1px;color:var(--text)}.logo span{color:var(--blue)}
+.tagline{font-size:13px;color:var(--text-soft);margin-top:-12px}
+.upload-box{width:100%;max-width:400px;border:2px dashed #93c5fd;border-radius:24px;padding:48px 24px;cursor:pointer;transition:all .2s;background:var(--white);display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 4px 24px rgba(37,99,235,.08)}
+.upload-box:hover{border-color:var(--blue);background:var(--blue-light);transform:translateY(-2px);box-shadow:0 8px 32px rgba(37,99,235,.14)}
+.upload-icon{width:76px;height:76px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px}
+.upload-box h2{font-size:20px;font-weight:700;color:var(--text)}.upload-box p{font-size:14px;color:var(--text-soft)}
+.pill-btn{background:var(--blue);color:#fff;border:none;border-radius:50px;padding:15px 36px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%;max-width:400px;box-shadow:0 4px 14px rgba(37,99,235,.35);transition:all .2s}
+.pill-btn:hover{background:var(--blue-dark);box-shadow:0 6px 20px rgba(37,99,235,.45)}
+.pill-btn:active{transform:scale(.97)}
+
+/* ── EDITOR ── */
+#editor-screen{display:none;flex-direction:column;min-height:100vh;max-width:500px;margin:0 auto;background:var(--white)}
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:10}
+.tb-btn{background:var(--blue-light);border:none;color:var(--blue);border-radius:var(--radius-sm);padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.tb-btn:hover{background:var(--blue-mid)}.tb-btn:active{transform:scale(.95)}
+.tb-save{background:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(37,99,235,.3)}.tb-save:hover{background:var(--blue-dark)}
+.tb-title{font-size:15px;font-weight:700;color:var(--text)}
+
+/* ── CANVAS ── */
+#canvas-area{position:relative;background:#1e293b;width:100%;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:70vh}
+#canvas-area canvas{display:block;max-width:100%;max-height:70vh;height:auto;object-fit:contain}
+#photo-canvas{position:relative;z-index:1;width:100% !important;height:auto !important;max-height:70vh}
+#frame-canvas{position:absolute;top:0;left:0;width:100% !important;height:100% !important;z-index:2;pointer-events:none}
+#sticker-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.placed-sticker{position:absolute;font-size:44px;cursor:move;pointer-events:all;user-select:none;line-height:1;touch-action:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.frame-sticker{font-size:36px}
+
+/* ── BOTTOM PANEL ── */
+#bottom-panel{background:var(--white);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));position:sticky;bottom:0}
+#tab-bar{display:flex;overflow-x:auto;padding:10px 12px 0;gap:4px;scrollbar-width:none;border-bottom:1px solid var(--border)}
+#tab-bar::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:transparent;cursor:pointer;color:var(--text-soft);font-family:'DM Sans',sans-serif;transition:all .15s}
+.tab.active{background:var(--blue-light);color:var(--blue)}.tab-icon{font-size:20px;line-height:1}.tab-label{font-size:11px;font-weight:600}
+#tool-content{padding:16px;min-height:200px;max-height:360px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* ── FILTERS ── */
+.filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.filter-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+.filter-item:active{transform:scale(.93)}
+.filter-item.active .filter-preview{border-color:var(--blue);border-width:3px;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.filter-preview{width:100%;aspect-ratio:1;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:28px;transition:all .15s}
+.filter-item:hover .filter-preview{border-color:#93c5fd}
+.filter-label{font-size:11px;font-weight:600;color:var(--text-soft);text-align:center}
+.filter-item.active .filter-label{color:var(--blue);font-weight:700}
+
+/* ── SLIDERS ── */
+.slider-section{display:flex;flex-direction:column;gap:14px}
+.slider-row{display:flex;flex-direction:column;gap:6px}
+.slider-header{display:flex;justify-content:space-between;align-items:center}
+.slider-name{font-size:14px;font-weight:600;color:var(--text)}
+.slider-val{font-size:14px;font-weight:700;color:var(--blue);min-width:36px;text-align:right}
+input[type=range]{width:100%;height:44px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{background:var(--blue-mid);border-radius:4px;height:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--blue);margin-top:-10px;box-shadow:0 2px 8px rgba(37,99,235,.4)}
+input[type=range]::-moz-range-track{background:var(--blue-mid);border-radius:4px;height:6px}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--blue);border:none}
+
+/* ── FRAMES ── */
+.frames-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.frame-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.frame-item:active{transform:scale(.95)}
+.frame-preview{width:100%;aspect-ratio:1;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--blue-light);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:all .15s}
+.frame-item:hover .frame-preview{border-color:#93c5fd}
+.frame-item.active .frame-preview{border-color:var(--blue);border-width:3px;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.frame-label{font-size:11px;font-weight:600;color:var(--text-soft);text-align:center}
+.frame-item.active .frame-label{color:var(--blue);font-weight:700}
+
+/* ── TOOLS ── */
+.tools-panel{display:flex;flex-direction:column;gap:8px}
+.tool-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;width:100%;font-family:'DM Sans',sans-serif;transition:all .15s}
+.tool-btn:hover{background:var(--blue-light);border-color:#93c5fd}
+.tool-btn:active{transform:scale(.98)}
+.tool-btn .t-icon{font-size:24px;flex-shrink:0;width:34px;text-align:center}
+.tool-btn .t-title{font-size:14px;font-weight:700;color:var(--text)}
+.tool-btn .t-sub{font-size:12px;color:var(--text-soft);margin-top:2px}
+
+/* ── FACETUNE ── */
+.face-section-title{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-top:12px;margin-bottom:4px;padding-left:2px}
+
+/* ── LOADING ── */
+#loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:100;border-radius:0}
+.spinner{width:44px;height:44px;border:3px solid var(--blue-mid);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-text{font-size:14px;font-weight:600;color:var(--blue)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:11px 22px;border-radius:50px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="upload-screen">
+  <div class="logo">Photo<span>Magic</span> ✨</div>
+  <p class="tagline">100% offline · No account · No internet needed</p>
+  <div class="upload-box" onclick="document.getElementById('file-input').click()">
+    <div class="upload-icon">📷</div>
+    <h2>Add Your Photo</h2>
+    <p>Tap to choose from your gallery or camera roll</p>
+  </div>
+  <button class="pill-btn" onclick="document.getElementById('file-input').click()">Choose Photo</button>
+</div>
+
+<div id="editor-screen">
+  <div id="topbar">
+    <button class="tb-btn" onclick="newPhoto()">← New</button>
+    <span class="tb-title">PhotoMagic ✨</span>
+    <button class="tb-btn tb-save" onclick="downloadImage()">Save ↓</button>
+  </div>
+  <div id="canvas-area">
+    <canvas id="photo-canvas"></canvas>
+    <canvas id="frame-canvas"></canvas>
+    <canvas id="warp-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:4;pointer-events:none;opacity:0.7"></canvas>
+    <div id="sticker-layer"></div>
+    <div id="loading-overlay"><div class="spinner"></div><div id="loading-text">Working...</div></div>
+  </div>
+  <div id="bottom-panel">
+    <div id="tab-bar">
+      <button class="tab active" onclick="switchTab('filters')"  id="t-filters"><span class="tab-icon">🎨</span><span class="tab-label">Filters</span></button>
+      <button class="tab" onclick="switchTab('adjust')"    id="t-adjust"><span class="tab-icon">✨</span><span class="tab-label">Adjust</span></button>
+      <button class="tab" onclick="switchTab('facetune')"  id="t-facetune"><span class="tab-icon">💆</span><span class="tab-label">Facetune</span></button>
+      <button class="tab" onclick="switchTab('effects')"   id="t-effects"><span class="tab-icon">🌈</span><span class="tab-label">Effects</span></button>
+      <button class="tab" onclick="switchTab('frames')"    id="t-frames"><span class="tab-icon">🖼️</span><span class="tab-label">Frames</span></button>
+      <button class="tab" onclick="switchTab('tools')"     id="t-tools"><span class="tab-icon">🛠️</span><span class="tab-label">Tools</span></button>
+    </div>
+    <div id="tool-content"></div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="image/*" style="display:none">
+<div id="toast"></div>
+
+<script>
+// ── CANVAS SETUP ─────────────────────────────────────────────────────────────
+const photoCanvas = document.getElementById('photo-canvas');
+const pCtx = photoCanvas.getContext('2d');
+const frameCanvas = document.getElementById('frame-canvas');
+const fCtx = frameCanvas.getContext('2d');
+
+let origPixels = null;   // frozen deep copy — never mutated
+let imgW = 0, imgH = 0;
+let currentTab = 'filters';
+let activeFilter = 'none';
+let activeFrame = 'none';
+let adj  = {brightness:0,contrast:0,saturation:0,warmth:0,glow:0,fade:0,vignette:0,tint:0,clarity:0};
+let face = {slim:0,widen:0,smooth:0,glow:0,skinTone:0,whiten:0,eyeBright:0};
+
+// ── LIQUIFY WARP ENGINE ───────────────────────────────────────────────────────
+// Users paint a warp mask directly on the photo — only painted pixels warp.
+// The mask is a Float32Array (0..1) per pixel.
+// Warp direction: slim pulls horizontal edges inward toward local centre of mass.
+//
+// SLIM inverse mapping proof:
+//   For each output pixel (x,y) we ask: "which source pixel do I read?"
+//   If we want the face to look narrower, output pixels near the edges of the
+//   painted region should sample from SOURCE pixels further toward the centre.
+//   → srcX = x + (cx - x) * strength * mask(x,y)
+//   When mask=1 and strength=0.3: a pixel 100px right of cx reads from 70px right → content shifts left → face narrows ✓
+//
+// WIDEN: srcX = x - (cx - x) * strength * mask(x,y)  (opposite sign)
+
+let warpMask    = null; // Float32Array, same dimensions as image
+let warpCentreX = 0;   // x centre of the painted region (weighted)
+let warpCentreY = 0;   // y centre
+let warpBrushSize = 40; // display-space radius, scaled to pixel space on use
+let warpMode = 'slim';  // 'slim' | 'widen'
+let isPainting = false;
+
+function initWarpMask() {
+  warpMask = new Float32Array(imgW * imgH);
+  warpCentreX = imgW / 2;
+  warpCentreY = imgH / 2;
+}
+
+function clearWarpMask() {
+  if (warpMask) warpMask.fill(0);
+  warpCentreX = imgW / 2;
+  warpCentreY = imgH / 2;
+}
+
+// Paint a Gaussian brush stroke into the mask at canvas-pixel coords (px,py)
+// px,py are in *display* space; we scale to image pixel space
+function paintBrush(px, py) {
+  if (!warpMask) initWarpMask();
+  const pc = document.getElementById('photo-canvas');
+  const scaleX = imgW / pc.offsetWidth;
+  const scaleY = imgH / pc.offsetHeight;
+  const ix = px * scaleX;
+  const iy = py * scaleY;
+  const brushR = warpBrushSize * Math.max(scaleX, scaleY);
+  const r2 = brushR * brushR;
+  const x0 = Math.max(0, Math.floor(ix - brushR));
+  const x1 = Math.min(imgW - 1, Math.ceil(ix + brushR));
+  const y0 = Math.max(0, Math.floor(iy - brushR));
+  const y1 = Math.min(imgH - 1, Math.ceil(iy + brushR));
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const dx = x - ix, dy = y - iy;
+      const d2 = dx*dx + dy*dy;
+      if (d2 < r2) {
+        // Smooth Gaussian falloff: 1 at centre, 0 at edge
+        const t = 1 - d2/r2;
+        const gauss = t * t * (3 - 2*t); // smoothstep
+        const idx = y * imgW + x;
+        warpMask[idx] = Math.min(1, warpMask[idx] + gauss * 0.35);
+      }
+    }
+  }
+  // Recompute weighted centre of mask
+  let sumW=0, sumX=0, sumY=0;
+  for (let y=0; y<imgH; y++) for (let x=0; x<imgW; x++) {
+    const w=warpMask[y*imgW+x]; if(w>0.01){sumW+=w;sumX+=x*w;sumY+=y*w;}
+  }
+  if (sumW>0) { warpCentreX=sumX/sumW; warpCentreY=sumY/sumW; }
+}
+
+// Apply the warp using the mask
+function warpPixels(src, w, h, slimT, widenT) {
+  if (!warpMask || (slimT === 0 && widenT === 0)) return src.slice ? src.slice() : new Uint8ClampedArray(src);
+  const out = new Uint8ClampedArray(w * h * 4);
+  const cx  = warpCentreX;
+  const str = (slimT > 0 ? slimT : widenT) * 0.45;
+
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    const cy = warpCentreY;
+    for (let x = 0; x < w; x++) {
+      const mask = warpMask[y * w + x];
+      let srcX = x, srcY = y;
+      if (mask > 0.001) {
+        // dx = distance from centre to this pixel (positive = right of centre)
+        const dx = x - cx;
+        const dy = y - cy;
+
+        if (slimT > 0) {
+          // SLIM: output pixel at x should read from source pixel FURTHER from centre.
+          // srcX = x + dx * str * mask  (pushes sample outward → content compresses inward)
+          // Proof: x=400, cx=240, dx=+160, str=0.3, mask=1 → srcX=448 (reads from right edge → face narrower) ✓
+          srcX = x + dx * str * mask;
+          srcY = y + dy * str * mask * 0.18;
+        } else {
+          // WIDEN: output pixel at x should read from source pixel CLOSER to centre.
+          // srcX = x - dx * str * mask  (pulls sample inward → content stretches outward)
+          srcX = x - dx * str * mask;
+          srcY = y - dy * str * mask * 0.18;
+        }
+      }
+      srcX = Math.max(0, Math.min(w - 1.0001, srcX));
+      srcY = Math.max(0, Math.min(h - 1.0001, srcY));
+      // Bilinear interpolation
+      const x0 = srcX | 0, x1 = Math.min(x0+1, w-1), fx = srcX - x0;
+      const y0i = srcY | 0, y1i = Math.min(y0i+1, h-1), fy = srcY - y0i;
+      const s00 = (y0i*w+x0)*4, s10 = (y0i*w+x1)*4;
+      const s01 = (y1i*w+x0)*4, s11 = (y1i*w+x1)*4;
+      const di  = (row + x) * 4;
+      for (let c=0; c<3; c++) {
+        const top = src[s00+c]*(1-fx) + src[s10+c]*fx;
+        const bot = src[s01+c]*(1-fx) + src[s11+c]*fx;
+        out[di+c] = top*(1-fy) + bot*fy;
+      }
+      out[di+3] = 255;
+    }
+  }
+  return out;
+}
+
+// Draw the mask overlay on the overlay canvas (semi-transparent teal brush marks)
+function drawMaskOverlay() {
+  if (!warpMask) return;
+  const oc = document.getElementById('warp-overlay');
+  if (!oc) return;
+  const ctx2 = oc.getContext('2d');
+  ctx2.clearRect(0, 0, oc.width, oc.height);
+  const id = ctx2.createImageData(imgW, imgH);
+  for (let i = 0; i < warpMask.length; i++) {
+    const v = warpMask[i];
+    if (v > 0.01) {
+      id.data[i*4]   = 56;
+      id.data[i*4+1] = 189;
+      id.data[i*4+2] = 248;
+      id.data[i*4+3] = Math.round(v * 120);
+    }
+  }
+  ctx2.putImageData(id, 0, 0);
+}
+
+// Attach/detach brush painting listeners to the photo canvas
+function attachWarpBrush() {
+  const pc = document.getElementById('photo-canvas');
+  pc.style.cursor = 'crosshair';
+  pc.addEventListener('mousedown',  warpMouseDown);
+  pc.addEventListener('mousemove',  warpMouseMove);
+  pc.addEventListener('mouseup',    warpMouseUp);
+  pc.addEventListener('mouseleave', warpMouseUp);
+  pc.addEventListener('touchstart', warpTouchStart, {passive:false});
+  pc.addEventListener('touchmove',  warpTouchMove,  {passive:false});
+  pc.addEventListener('touchend',   warpMouseUp);
+}
+function detachWarpBrush() {
+  const pc = document.getElementById('photo-canvas');
+  pc.style.cursor = '';
+  pc.removeEventListener('mousedown',  warpMouseDown);
+  pc.removeEventListener('mousemove',  warpMouseMove);
+  pc.removeEventListener('mouseup',    warpMouseUp);
+  pc.removeEventListener('mouseleave', warpMouseUp);
+  pc.removeEventListener('touchstart', warpTouchStart);
+  pc.removeEventListener('touchmove',  warpTouchMove);
+  pc.removeEventListener('touchend',   warpMouseUp);
+}
+function getCanvasPos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function warpMouseDown(e) { isPainting=true; const p=getCanvasPos(e,this); paintBrush(p.x,p.y); drawMaskOverlay(); applyAll(); }
+function warpMouseMove(e) { if(!isPainting) return; const p=getCanvasPos(e,this); paintBrush(p.x,p.y); drawMaskOverlay(); applyAll(); }
+function warpMouseUp()    { isPainting=false; }
+function warpTouchStart(e){ e.preventDefault(); isPainting=true; const t=e.touches[0],r=this.getBoundingClientRect(); paintBrush(t.clientX-r.left,t.clientY-r.top); drawMaskOverlay(); applyAll(); }
+function warpTouchMove(e) { e.preventDefault(); if(!isPainting) return; const t=e.touches[0],r=this.getBoundingClientRect(); paintBrush(t.clientX-r.left,t.clientY-r.top); drawMaskOverlay(); applyAll(); }
+
+// ── COLOUR PROCESSING ────────────────────────────────────────────────────────
+function clamp(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+
+function rgbToHsl(r, g, b) {
+  r/=255; g/=255; b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+  let h, s, l=(mx+mn)/2;
+  if (mx===mn) { h=s=0; } else {
+    const d=mx-mn; s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    if(mx===r) h=(g-b)/d+(g<b?6:0);
+    else if(mx===g) h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h/=6;
+  }
+  return [h*360, s*100, l*100];
+}
+
+function colourProcess(src, w, h, a, fa) {
+  const out = new Uint8ClampedArray(w * h * 4);
+  const cF  = (259*(a.contrast+255)) / (255*(259-a.contrast));
+  const bF  = a.brightness * 2.55;
+  const sF  = 1 + a.saturation / 100;
+  const glA = a.glow / 100;
+  const fdA = a.fade / 100;
+  const clA = a.clarity / 60;
+
+  for (let i = 0; i < src.length; i += 4) {
+    let r=src[i], g=src[i+1], b=src[i+2];
+
+    // contrast + brightness
+    r=cF*(r-128)+128+bF; g=cF*(g-128)+128+bF; b=cF*(b-128)+128+bF;
+    // warmth
+    r+=a.warmth*.7; b-=a.warmth*.7;
+    // tint (green-magenta axis)
+    g+=a.tint*.25; r-=a.tint*.08; b-=a.tint*.08;
+    // saturation
+    const gr=.299*r+.587*g+.114*b;
+    r=gr+sF*(r-gr); g=gr+sF*(g-gr); b=gr+sF*(b-gr);
+    // glow — only lifts highlights
+    if (glA>0) { const lm=(r+g+b)/3, hl=Math.max(0,(lm-80)/175); r+=glA*25*hl; g+=glA*18*hl; b+=glA*10*hl; }
+    // fade — lifts blacks
+    if (fdA>0) { const f=fdA*40; r=r*(1-f/255)+f; g=g*(1-f/255)+f; b=b*(1-f/255)+f; }
+    // clarity — mid-tone micro-contrast
+    if (clA!==0) { const lm2=(.299*r+.587*g+.114*b)/255, mm=4*lm2*(1-lm2); r+=(r-gr)*clA*mm*.5; g+=(g-gr)*clA*mm*.5; b+=(b-gr)*clA*mm*.5; }
+
+    // ── SKIN-ONLY facetune ──
+    if (fa) {
+      const [h,s,l] = rgbToHsl(clamp(r), clamp(g), clamp(b));
+      // Broader skin detection: hue 5-42°, some saturation, mid luminance
+      const isSkin = h>5 && h<42 && s>10 && s<82 && l>15 && l<93;
+      if (isSkin) {
+        if (fa.smooth>0)    { const sm=fa.smooth/100; r+=(185-r)*sm*.24; g+=(148-g)*sm*.20; b+=(118-b)*sm*.14; }
+        if (fa.glow>0)      { r+=fa.glow/100*20; g+=fa.glow/100*13; b+=fa.glow/100*6; }
+        if (fa.skinTone!==0){ r+=fa.skinTone*.55; g+=fa.skinTone*.13; }
+        if (fa.whiten>0)    { const wh=fa.whiten/100; r+=(255-r)*wh*.20; g+=(255-g)*wh*.17; b+=(255-b)*wh*.15; }
+        if (fa.eyeBright>0 && l<48) { const eb=fa.eyeBright/100; r+=(255-r)*eb*.24; g+=(255-g)*eb*.24; b+=(255-b)*eb*.24; }
+      }
+    }
+
+    out[i]=clamp(r); out[i+1]=clamp(g); out[i+2]=clamp(b); out[i+3]=255;
+  }
+  return out;
+}
+
+// ── MAIN RENDER ──────────────────────────────────────────────────────────────
+function applyAll() {
+  if (!origPixels) return;
+
+  // 1. Warp from frozen original using mask
+  let px;
+  if (warpMask && (face.slim > 0 || face.widen > 0)) {
+    px = warpPixels(origPixels, imgW, imgH, face.slim/100, face.widen/100);
+  } else {
+    px = origPixels.slice();
+  }
+
+  // 2. Colour grade
+  const result = colourProcess(px, imgW, imgH, adj, face);
+  pCtx.putImageData(new ImageData(result, imgW, imgH), 0, 0);
+
+  // 3. Vignette overlay
+  if (adj.vignette > 0) {
+    const cx=imgW/2, cy=imgH/2, rad=Math.max(cx,cy)*1.4;
+    const gr=pCtx.createRadialGradient(cx,cy,rad*(1-adj.vignette/115),cx,cy,rad);
+    gr.addColorStop(0,'rgba(0,0,0,0)');
+    gr.addColorStop(1,`rgba(0,0,0,${adj.vignette/100*.8})`);
+    pCtx.fillStyle=gr; pCtx.fillRect(0,0,imgW,imgH);
+  }
+
+  // 4. Redraw frame overlay
+  drawFrame(activeFrame);
+}
+
+// ── FRAMES ───────────────────────────────────────────────────────────────────
+const FRAMES = [
+  { id:'none',       name:'None',       thumb:'✕' },
+  { id:'twpb1',      name:'Rainbow',    thumb:'🌈' },
+  { id:'twpb2',      name:'Girly',      thumb:'🎀' },
+  { id:'twpb3',      name:'Sweet',      thumb:'🍓' },
+  { id:'twpb4',      name:'Stars',      thumb:'⭐' },
+  { id:'twpb5',      name:'Garden',     thumb:'🌸' },
+  { id:'twpb6',      name:'Dream',      thumb:'🌙' },
+  { id:'twpb7',      name:'Bubble',     thumb:'🫧' },
+  { id:'twpb8',      name:'Candy',      thumb:'🍬' },
+  { id:'twpb9',      name:'Kitty',      thumb:'🐱' },
+  { id:'twpb10',     name:'Ocean',      thumb:'🌊' },
+  { id:'twpb11',     name:'Strawberry', thumb:'🍓' },
+  { id:'twpb12',     name:'Retro',      thumb:'📼' },
+];
+
+let frameStickers = [];
+
+const FRAME_STICKER_SETS = {
+  twpb1:  ['🌈','⭐','💛','🧡','💚','💙','💜','✨'],
+  twpb2:  ['🎀','💕','🌸','🍓','💖','🎵','🌷','🦋'],
+  twpb3:  ['🍓','🍰','🧁','🍭','💗','🌸','🍒','💝'],
+  twpb4:  ['⭐','🌟','💫','✨','🌙','🔮','☄️','💎'],
+  twpb5:  ['🌸','🌺','🌷','🌼','🌻','🍃','🌿','🦋'],
+  twpb6:  ['🌙','💜','✨','🌟','🔮','💫','🌠','🌌'],
+  twpb7:  ['🫧','💙','🌊','🐠','🐟','🫧','💎','🌈'],
+  twpb8:  ['🍬','🍭','🧁','🍰','🍡','🍩','🌈','💗'],
+  twpb9:  ['🐱','🎀','🐾','🌸','💗','🍓','🐈','✨'],
+  twpb10: ['🌊','🐚','🐠','⭐','🌟','🪸','🐬','💙'],
+  twpb11: ['🍓','🌸','🎀','💗','🌷','🍰','🌺','💖'],
+  twpb12: ['📼','🎵','📷','🌈','💖','⭐','🕹️','🎮'],
+};
+
+function drawFrame(id) {
+  const w=imgW, h=imgH;
+  fCtx.clearRect(0,0,w,h);
+  if (id==='none') return;
+  fCtx.save();
+
+  // Photobooth frames are more generous — thick decorative borders
+  const b = Math.round(w * 0.08);
+
+  if (id==='twpb1') {
+    // 彩虹 Rainbow — classic Taiwanese rainbow stripe border + white inner frame
+    const stripes=['#ff4d6d','#ff9f1c','#ffdd00','#4cc9f0','#7b2d8b','#e040fb'];
+    const sw = Math.floor(b/stripes.length);
+    stripes.forEach((col,i)=>{
+      fCtx.fillStyle=col;
+      const o=i*sw;
+      fCtx.fillRect(o,o,w-o*2,sw);           // top
+      fCtx.fillRect(o,h-o-sw,w-o*2,sw);      // bottom
+      fCtx.fillRect(o,o,sw,h-o*2);            // left
+      fCtx.fillRect(w-o-sw,o,sw,h-o*2);       // right
+    });
+    // White inner line
+    fCtx.strokeStyle='#fff'; fCtx.lineWidth=2;
+    fCtx.strokeRect(b+2,b+2,w-b*2-4,h-b*2-4);
+    // Corner stars
+    fCtx.font=`${Math.round(b*.8)}px serif`; fCtx.textAlign='center'; fCtx.textBaseline='middle';
+    [[b*.55,b*.55],[w-b*.55,b*.55],[b*.55,h-b*.55],[w-b*.55,h-b*.55]].forEach(([x,y])=>fCtx.fillText('⭐',x,y));
+    // Bottom text strip
+  }
+
+  else if (id==='twpb2') {
+    // Girly — pink lace-style border with bows and hearts
+    const g=fCtx.createLinearGradient(0,0,w,0);
+    g.addColorStop(0,'#ff80b5'); g.addColorStop(.5,'#ff4da6'); g.addColorStop(1,'#ff80b5');
+    fCtx.fillStyle=g; fillBorder(fCtx,w,h,b);
+    // White inner border
+    fCtx.fillStyle='rgba(255,255,255,0.9)';
+    fillBorder(fCtx,w,h,Math.round(b*.22));
+    // Re-fill hot pink innermost
+    const g2=fCtx.createLinearGradient(0,0,w,0);
+    g2.addColorStop(0,'#ff80b5'); g2.addColorStop(.5,'#ff4da6'); g2.addColorStop(1,'#ff80b5');
+    fCtx.fillStyle=g2; fillBorder(fCtx,w,h,Math.round(b*.1));
+    // Emoji decoration
+    drawBorderEmoji(fCtx,w,h,b,['🎀','💕','🌸','💖','✨'],Math.round(b*.75));
+    // Big bows at corners
+    const bs=Math.round(b*1.1);
+    fCtx.font=`${bs}px serif`; fCtx.textAlign='center'; fCtx.textBaseline='middle';
+    [[b*.55,b*.55],[w-b*.55,b*.55],[b*.55,h-b*.55],[w-b*.55,h-b*.55]].forEach(([x,y])=>fCtx.fillText('🎀',x,y));
+    // Draw original cute ribbon-cat characters at corners
+    drawCuteCat(fCtx,b*.55,b*.55,b*.42,'#fff','#ff6eb0');
+    drawCuteCat(fCtx,w-b*.55,b*.55,b*.42,'#fff','#ff6eb0');
+    drawCuteCat(fCtx,b*.55,h-b*.55,b*.42,'#fff','#ff6eb0');
+    drawCuteCat(fCtx,w-b*.55,h-b*.55,b*.42,'#fff','#ff6eb0');
+  }
+
+  else if (id==='twpb3') {
+    // Sweet — strawberry cream pastel
+    fCtx.fillStyle='#fce4ec'; fillBorder(fCtx,w,h,b);
+    fCtx.fillStyle='#f48fb1';
+    fillBorder(fCtx,w,h,Math.round(b*.3));
+    fCtx.fillStyle='#fce4ec';
+    fillBorder(fCtx,w,h,Math.round(b*.15));
+    fCtx.fillStyle='#e91e63';
+    fillBorder(fCtx,w,h,Math.round(b*.08));
+    drawBorderEmoji(fCtx,w,h,b,['🍓','🌸','🍰','💗','🍒'],Math.round(b*.72));
+    drawCuteBear(fCtx,b*.55,b*.55,b*.42,'#ffc0cb','#e91e63');
+    drawCuteBear(fCtx,w-b*.55,b*.55,b*.42,'#ffc0cb','#e91e63');
+    drawCuteBear(fCtx,b*.55,h-b*.55,b*.42,'#ffc0cb','#e91e63');
+    drawCuteBear(fCtx,w-b*.55,h-b*.55,b*.42,'#ffc0cb','#e91e63');
+  }
+
+  else if (id==='twpb4') {
+    // Stars — deep galaxy navy
+    fCtx.fillStyle='#0d0d2b'; fillBorder(fCtx,w,h,b);
+    fCtx.strokeStyle='rgba(180,160,255,0.6)'; fCtx.lineWidth=1.5;
+    fCtx.shadowColor='#a78bfa'; fCtx.shadowBlur=12;
+    fCtx.strokeRect(b+3,b+3,w-b*2-6,h-b*2-6); fCtx.shadowBlur=0;
+    const starPos=[];
+    for(let i=0;i<60;i++){
+      const side=Math.floor(Math.random()*4);
+      let x,y;
+      if(side===0){x=Math.random()*w;y=Math.random()*b;}
+      else if(side===1){x=Math.random()*w;y=h-Math.random()*b;}
+      else if(side===2){x=Math.random()*b;y=Math.random()*h;}
+      else{x=w-Math.random()*b;y=Math.random()*h;}
+      starPos.push([x,y,Math.random()>.5?'★':'·',6+Math.random()*10]);
+    }
+    starPos.forEach(([x,y,s,sz])=>{
+      fCtx.fillStyle=`rgba(255,255,200,${0.5+Math.random()*.5})`;
+      fCtx.font=`${sz}px serif`; fCtx.textAlign='center'; fCtx.textBaseline='middle';
+      fCtx.fillText(s,x,y);
+    });
+    drawBorderEmoji(fCtx,w,h,b,['✨','⭐','💫','🌙','🔮'],Math.round(b*.75));
+    drawCuteStar(fCtx,b*.55,b*.55,b*.42,'#ffd700','#a78bfa');
+    drawCuteStar(fCtx,w-b*.55,b*.55,b*.42,'#ffd700','#a78bfa');
+    drawCuteStar(fCtx,b*.55,h-b*.55,b*.42,'#ffd700','#a78bfa');
+    drawCuteStar(fCtx,w-b*.55,h-b*.55,b*.42,'#ffd700','#a78bfa');
+  }
+
+  else if (id==='twpb5') {
+    // Garden — white with delicate floral corners
+    fCtx.fillStyle='#fff8fc'; fillBorder(fCtx,w,h,b);
+    fCtx.fillStyle='#a8d8a8';
+    fillBorder(fCtx,w,h,Math.round(b*.1));
+    fCtx.fillStyle='#fff8fc';
+    fillBorder(fCtx,w,h,Math.round(b*.06));
+    fCtx.fillStyle='#ffb7c5';
+    fillBorder(fCtx,w,h,Math.round(b*.03));
+    drawBorderEmoji(fCtx,w,h,b,['🌸','🌺','🌷','🌼','🌻','🌿'],Math.round(b*.72));
+    drawCuteBunny(fCtx,b*.55,b*.55,b*.42,'#fff','#ffb7c5');
+    drawCuteBunny(fCtx,w-b*.55,b*.55,b*.42,'#fff','#ffb7c5');
+    drawCuteBunny(fCtx,b*.55,h-b*.55,b*.42,'#fff','#ffb7c5');
+    drawCuteBunny(fCtx,w-b*.55,h-b*.55,b*.42,'#fff','#ffb7c5');
+  }
+
+  else if (id==='twpb6') {
+    // Dream — soft purple-lilac gradient haze
+    const g=fCtx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#c084fc'); g.addColorStop(.35,'#a78bfa'); g.addColorStop(.65,'#818cf8'); g.addColorStop(1,'#c084fc');
+    fCtx.fillStyle=g; fillBorder(fCtx,w,h,b);
+    fCtx.fillStyle='rgba(255,255,255,.15)'; fillBorder(fCtx,w,h,Math.round(b*.18));
+    fCtx.fillStyle=g; fillBorder(fCtx,w,h,Math.round(b*.1));
+    drawBorderEmoji(fCtx,w,h,b,['🌙','💜','✨','💫','🔮'],Math.round(b*.75));
+    drawCuteMoon(fCtx,b*.55,b*.55,b*.42,'#fffde7','#c084fc');
+    drawCuteMoon(fCtx,w-b*.55,b*.55,b*.42,'#fffde7','#c084fc');
+    drawCuteMoon(fCtx,b*.55,h-b*.55,b*.42,'#fffde7','#c084fc');
+    drawCuteMoon(fCtx,w-b*.55,h-b*.55,b*.42,'#fffde7','#c084fc');
+    fCtx.strokeStyle='rgba(255,255,255,0.5)'; fCtx.lineWidth=1;
+    fCtx.setLineDash([3,5]); fCtx.strokeRect(b+5,b+5,w-b*2-10,h-b*2-10); fCtx.setLineDash([]);
+  }
+
+  else if (id==='twpb7') {
+    // Bubble — aqua + white bubbles
+    fCtx.fillStyle='#e0f7ff'; fillBorder(fCtx,w,h,b);
+    fCtx.fillStyle='#7dd3fc';
+    fillBorder(fCtx,w,h,Math.round(b*.12));
+    fCtx.fillStyle='#e0f7ff';
+    fillBorder(fCtx,w,h,Math.round(b*.07));
+    for(let i=0;i<50;i++){
+      const side=Math.floor(Math.random()*4);
+      let x,y;
+      if(side===0){x=Math.random()*w;y=Math.random()*b*.9;}
+      else if(side===1){x=Math.random()*w;y=h-Math.random()*b*.9;}
+      else if(side===2){x=Math.random()*b*.9;y=Math.random()*h;}
+      else{x=w-Math.random()*b*.9;y=Math.random()*h;}
+      const r=2+Math.random()*6;
+      fCtx.beginPath(); fCtx.arc(x,y,r,0,Math.PI*2);
+      fCtx.fillStyle=`rgba(${100+Math.round(Math.random()*100)},${200+Math.round(Math.random()*55)},255,${0.3+Math.random()*.5})`;
+      fCtx.fill();
+      fCtx.strokeStyle='rgba(255,255,255,0.8)'; fCtx.lineWidth=.8; fCtx.stroke();
+    }
+    drawBorderEmoji(fCtx,w,h,b,['🫧','💙','🐠','🌊','🐟'],Math.round(b*.75));
+    drawCuteFish(fCtx,b*.55,b*.55,b*.42,'#bae6fd','#0284c7');
+    drawCuteFish(fCtx,w-b*.55,b*.55,b*.42,'#bae6fd','#0284c7');
+    drawCuteFish(fCtx,b*.55,h-b*.55,b*.42,'#bae6fd','#0284c7');
+    drawCuteFish(fCtx,w-b*.55,h-b*.55,b*.42,'#bae6fd','#0284c7');
+  }
+
+  else if (id==='twpb8') {
+    // Candy — diagonal candy stripes
+    const sw=Math.round(b*.45);
+    const cols=['#ff80ab','#ffee58','#80deea','#b39ddb','#ff8a65'];
+    fCtx.save();
+    fCtx.beginPath();
+    fCtx.rect(0,0,w,b); fCtx.rect(0,h-b,w,b); fCtx.rect(0,b,b,h-b*2); fCtx.rect(w-b,b,b,h-b*2);
+    fCtx.clip();
+    for(let i=-h;i<w+h;i+=sw*2){
+      cols.forEach((c,ci)=>{
+        fCtx.fillStyle=c;
+        fCtx.beginPath();
+        fCtx.moveTo(i+ci*sw*2/cols.length,0);
+        fCtx.lineTo(i+ci*sw*2/cols.length+sw,0);
+        fCtx.lineTo(i+ci*sw*2/cols.length+sw+h,h);
+        fCtx.lineTo(i+ci*sw*2/cols.length+h,h);
+        fCtx.closePath(); fCtx.fill();
+      });
+    }
+    fCtx.restore();
+    fCtx.strokeStyle='rgba(255,255,255,0.8)'; fCtx.lineWidth=2;
+    fCtx.strokeRect(b+2,b+2,w-b*2-4,h-b*2-4);
+    drawBorderEmoji(fCtx,w,h,b,['🍬','🍭','🧁','🍡','🍩'],Math.round(b*.75));
+    drawCuteChick(fCtx,b*.55,b*.55,b*.42,'#fff9c4','#f59e0b');
+    drawCuteChick(fCtx,w-b*.55,b*.55,b*.42,'#fff9c4','#f59e0b');
+    drawCuteChick(fCtx,b*.55,h-b*.55,b*.42,'#fff9c4','#f59e0b');
+    drawCuteChick(fCtx,w-b*.55,h-b*.55,b*.42,'#fff9c4','#f59e0b');
+  }
+
+  else if (id==='twpb9') {
+    // Kitty — white with cat paw prints
+    fCtx.fillStyle='#fff0f4'; fillBorder(fCtx,w,h,b);
+    fCtx.fillStyle='#ffb3c6'; fillBorder(fCtx,w,h,Math.round(b*.15));
+    fCtx.fillStyle='#fff0f4'; fillBorder(fCtx,w,h,Math.round(b*.1));
+    fCtx.fillStyle='#ff85a1'; fillBorder(fCtx,w,h,Math.round(b*.05));
+    drawBorderEmoji(fCtx,w,h,b,['🐾','🐱','💗','🎀','🐾'],Math.round(b*.72));
+    drawCuteCat(fCtx,b*.55,b*.55,b*.42,'#fff0f4','#ff85a1');
+    drawCuteCat(fCtx,w-b*.55,b*.55,b*.42,'#fff0f4','#ff85a1');
+    drawCuteCat(fCtx,b*.55,h-b*.55,b*.42,'#fff0f4','#ff85a1');
+    drawCuteCat(fCtx,w-b*.55,h-b*.55,b*.42,'#fff0f4','#ff85a1');
+  }
+
+  else if (id==='twpb10') {
+    // Ocean — gradient teal-to-deep-blue
+    const g=fCtx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#22d3ee'); g.addColorStop(.5,'#0284c7'); g.addColorStop(1,'#0d47a1');
+    fCtx.fillStyle=g; fillBorder(fCtx,w,h,b);
+    fCtx.strokeStyle='rgba(255,255,255,0.3)'; fCtx.lineWidth=1.5;
+    for(let wave=0;wave<3;wave++){
+      fCtx.beginPath();
+      for(let x=0;x<=w;x+=3){
+        const y=wave*6+Math.sin(x/20+wave)*4;
+        x===0?fCtx.moveTo(x,y):fCtx.lineTo(x,y);
+      }
+      fCtx.stroke();
+      fCtx.beginPath();
+      for(let x=0;x<=w;x+=3){
+        const y=h-wave*6-Math.sin(x/20+wave)*4;
+        x===0?fCtx.moveTo(x,y):fCtx.lineTo(x,y);
+      }
+      fCtx.stroke();
+    }
+    drawBorderEmoji(fCtx,w,h,b,['🌊','🐚','🐠','⭐','🪸'],Math.round(b*.75));
+    drawCuteFish(fCtx,b*.55,b*.55,b*.42,'#7dd3fc','#0d47a1');
+    drawCuteFish(fCtx,w-b*.55,b*.55,b*.42,'#7dd3fc','#0d47a1');
+    drawCuteFish(fCtx,b*.55,h-b*.55,b*.42,'#7dd3fc','#0d47a1');
+    drawCuteFish(fCtx,w-b*.55,h-b*.55,b*.42,'#7dd3fc','#0d47a1');
+  }
+
+  else if (id==='twpb11') {
+    // Strawberry — red & white checkerboard
+    const cs=Math.round(b*.5);
+    for(let r=0;r<Math.ceil(h/cs);r++){
+      for(let cc=0;cc<Math.ceil(w/cs);cc++){
+        const x=cc*cs, y=r*cs;
+        const inBorder=x<b||x>w-b-cs||y<b||y>h-b-cs;
+        if(inBorder){
+          fCtx.fillStyle=(r+cc)%2===0?'#e53935':'#fff';
+          fCtx.fillRect(x,y,cs,cs);
+        }
+      }
+    }
+    fCtx.fillStyle='#fff9f9';
+    fCtx.fillRect(b,b,w-b*2,h-b*2);
+    fCtx.strokeStyle='#e53935'; fCtx.lineWidth=2;
+    fCtx.strokeRect(b+2,b+2,w-b*2-4,h-b*2-4);
+    drawBorderEmoji(fCtx,w,h,b,['🍓','🌸','🎀','💗','🍒'],Math.round(b*.72));
+    drawCuteBear(fCtx,b*.55,b*.55,b*.42,'#fff','#e53935');
+    drawCuteBear(fCtx,w-b*.55,b*.55,b*.42,'#fff','#e53935');
+    drawCuteBear(fCtx,b*.55,h-b*.55,b*.42,'#fff','#e53935');
+    drawCuteBear(fCtx,w-b*.55,h-b*.55,b*.42,'#fff','#e53935');
+  }
+
+  else if (id==='twpb12') {
+    // Retro — VHS/Y2K nostalgia
+    fCtx.fillStyle='#1a1a2e'; fillBorder(fCtx,w,h,b);
+    for(let y=0;y<h;y+=4){
+      const inB=y<b||y>h-b;
+      if(inB){fCtx.fillStyle='rgba(0,255,200,0.06)'; fCtx.fillRect(0,y,w,2);}
+    }
+    for(let x=0;x<b;x+=4){fCtx.fillStyle='rgba(0,255,200,0.06)'; fCtx.fillRect(x,0,2,h); fCtx.fillRect(w-x-2,0,2,h);}
+    ['#00ffe1','#ff00c8','#00ffe1'].forEach((col,i)=>{
+      fCtx.strokeStyle=col; fCtx.lineWidth=i===1?2:1;
+      fCtx.shadowColor=col; fCtx.shadowBlur=i===1?10:5;
+      const off=b+i*3;
+      fCtx.strokeRect(off,off,w-off*2,h-off*2);
+    }); fCtx.shadowBlur=0;
+    drawBorderEmoji(fCtx,w,h,b,['📼','🎵','💾','⭐','🌈'],Math.round(b*.75));
+    drawCuteRobot(fCtx,b*.55,b*.55,b*.42,'#00ffe1','#1a1a2e');
+    drawCuteRobot(fCtx,w-b*.55,b*.55,b*.42,'#00ffe1','#1a1a2e');
+    drawCuteRobot(fCtx,b*.55,h-b*.55,b*.42,'#00ffe1','#1a1a2e');
+    drawCuteRobot(fCtx,w-b*.55,h-b*.55,b*.42,'#00ffe1','#1a1a2e');
+  }
+
+  fCtx.restore();
+}
+
+// Helper: bottom text strip inside border
+
+// ── ORIGINAL CUTE CHARACTER DRAWINGS ─────────────────────────────────────────
+// ── HAND-DRAWN WHIMSICAL CHARACTER DRAWINGS ──────────────────────────────────
+// All shapes drawn with wobbly bezier curves and slightly imperfect lines
+// to feel like they were sketched with a marker pen.
+
+// Wobbly circle helper — draws a circle using bezier curves with slight jitter
+function wobbleCircle(c,cx,cy,r,jit){
+  const pts=12, j=jit||r*.06;
+  c.beginPath();
+  for(let i=0;i<=pts;i++){
+    const a=(i/pts)*Math.PI*2 - Math.PI/2;
+    const rr=r+(Math.sin(i*2.3+1.1)*j)+(Math.cos(i*1.7)*j*.5);
+    const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+    i===0?c.moveTo(x,y):c.lineTo(x,y);
+  }
+  c.closePath();
+}
+
+// Wobbly ellipse helper
+function wobbleEllipse(c,cx,cy,rx,ry,jit){
+  const pts=14, j=jit||rx*.06;
+  c.beginPath();
+  for(let i=0;i<=pts;i++){
+    const a=(i/pts)*Math.PI*2 - Math.PI/2;
+    const ex=rx+(Math.sin(i*2.1)*j), ey=ry+(Math.cos(i*1.9)*j*.7);
+    const x=cx+Math.cos(a)*ex, y=cy+Math.sin(a)*ey;
+    i===0?c.moveTo(x,y):c.lineTo(x,y);
+  }
+  c.closePath();
+}
+
+// Sketchy line — draws a line with a slight hand-drawn wobble
+function sketchLine(c,x1,y1,x2,y2){
+  const mx=(x1+x2)/2+(y2-y1)*.04, my=(y1+y2)/2+(x1-x2)*.04;
+  c.beginPath(); c.moveTo(x1,y1); c.quadraticCurveTo(mx,my,x2,y2); c.stroke();
+}
+
+// Cute whimsical CAT — round wobbly head, pointy ears, big dot eyes, tiny smile, bow
+function drawCuteCat(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2, r*.09);
+
+  // Wobbly head fill
+  wobbleCircle(c,cx,cy,r,r*.07);
+  c.fillStyle=bodyCol; c.fill();
+  c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Pointy triangle ears — drawn with slightly curved lines
+  [[-1],[1]].forEach(([s])=>{
+    const ex=cx+s*r*.58, ey=cy-r*.62;
+    c.beginPath();
+    c.moveTo(ex-s*r*.28, ey+r*.3);
+    c.quadraticCurveTo(ex+s*r*.05, ey-r*.38, ex+s*r*.28, ey+r*.25);
+    c.quadraticCurveTo(ex, ey+r*.22, ex-s*r*.28, ey+r*.3);
+    c.fillStyle=accentCol; c.fill();
+    // inner ear
+    c.beginPath();
+    c.moveTo(ex-s*r*.14, ey+r*.18);
+    c.quadraticCurveTo(ex+s*r*.04, ey-r*.18, ex+s*r*.14, ey+r*.12);
+    c.quadraticCurveTo(ex, ey+r*.1, ex-s*r*.14, ey+r*.18);
+    c.fillStyle=bodyCol; c.globalAlpha=.55; c.fill(); c.globalAlpha=1;
+  });
+
+  // Wobbly face oval (muzzle area — slightly lighter)
+  wobbleEllipse(c,cx,cy+r*.15,r*.38,r*.28,r*.02);
+  c.fillStyle=accentCol; c.globalAlpha=.12; c.fill(); c.globalAlpha=1;
+
+  // Big round eyes
+  [cx-r*.28, cx+r*.28].forEach(ex=>{
+    const ey=cy-r*.1;
+    wobbleCircle(c,ex,ey,r*.13,r*.02);
+    c.fillStyle=accentCol; c.fill();
+    // shine dot
+    c.beginPath(); c.arc(ex-r*.05,ey-r*.05,r*.05,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,0.75)'; c.fill();
+  });
+
+  // Tiny nose — triangle
+  c.beginPath(); c.moveTo(cx,cy+r*.06); c.lineTo(cx-r*.08,cy+r*.18); c.lineTo(cx+r*.08,cy+r*.18); c.closePath();
+  c.fillStyle=accentCol; c.fill();
+
+  // Smile — wobbly W shape
+  c.beginPath(); c.moveTo(cx-r*.18,cy+r*.22);
+  c.quadraticCurveTo(cx-r*.06,cy+r*.34,cx,cy+r*.26);
+  c.quadraticCurveTo(cx+r*.06,cy+r*.34,cx+r*.18,cy+r*.22);
+  c.strokeStyle=accentCol; c.lineWidth=lw*.8; c.stroke();
+
+  // Whiskers
+  c.lineWidth=Math.max(.8,lw*.5); c.globalAlpha=.55;
+  [[-1],[1]].forEach(([s])=>{
+    sketchLine(c, cx+r*.1*s,cy+r*.13, cx+r*.52*s,cy+r*.06);
+    sketchLine(c, cx+r*.1*s,cy+r*.2,  cx+r*.52*s,cy+r*.24);
+  });
+  c.globalAlpha=1;
+
+  // Lopsided bow on top
+  const bx=cx+r*.05, by=cy-r*.88, bs=r*.24;
+  c.lineWidth=lw;
+  [[-1],[1]].forEach(([s])=>{
+    c.beginPath();
+    c.moveTo(bx,by);
+    c.bezierCurveTo(bx+s*bs*.3,by-bs*.9, bx+s*bs*1.1,by-bs*.6, bx+s*bs,by+bs*.5);
+    c.bezierCurveTo(bx+s*bs*.8,by+bs*.9, bx+s*bs*.1,by+bs*.3, bx,by);
+    c.fillStyle=accentCol; c.fill(); c.strokeStyle=accentCol; c.stroke();
+  });
+  // Bow knot
+  wobbleCircle(c,bx,by,bs*.2,1);
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.stroke();
+
+  c.restore();
+}
+
+// Cute whimsical BEAR — chubby head, round ears, sleepy half-eyes, soft muzzle
+function drawCuteBear(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+
+  // Round ears first (behind head)
+  [[-1],[1]].forEach(([s])=>{
+    const ex=cx+s*r*.6, ey=cy-r*.65;
+    wobbleCircle(c,ex,ey,r*.3,r*.03);
+    c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+    wobbleCircle(c,ex,ey,r*.15,r*.02);
+    c.fillStyle=accentCol; c.globalAlpha=.35; c.fill(); c.globalAlpha=1;
+  });
+
+  // Wobbly head
+  wobbleCircle(c,cx,cy,r,r*.06);
+  c.fillStyle=bodyCol; c.fill();
+  c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Soft muzzle oval
+  wobbleEllipse(c,cx,cy+r*.22,r*.38,r*.26,r*.03);
+  c.fillStyle=accentCol; c.globalAlpha=.18; c.fill(); c.globalAlpha=1;
+
+  // Sleepy half-circle eyes
+  [cx-r*.26, cx+r*.26].forEach(ex=>{
+    const ey=cy-r*.1;
+    c.beginPath(); c.arc(ex,ey,r*.13,Math.PI,0,false);
+    c.fillStyle=accentCol; c.fill();
+    c.beginPath(); c.moveTo(ex-r*.13,ey); c.lineTo(ex+r*.13,ey);
+    c.strokeStyle=accentCol; c.lineWidth=lw*.7; c.stroke();
+    // lash
+    c.beginPath(); c.moveTo(ex-r*.05,ey-r*.07); c.lineTo(ex-r*.12,ey-r*.14);
+    c.stroke();
+  });
+
+  // Nose — rounded blob
+  wobbleCircle(c,cx,cy+r*.12,r*.08,r*.01);
+  c.fillStyle=accentCol; c.fill();
+
+  // Wobbly smile
+  c.beginPath(); c.moveTo(cx-r*.16,cy+r*.24);
+  c.quadraticCurveTo(cx+r*.02,cy+r*.38, cx+r*.18,cy+r*.22);
+  c.strokeStyle=accentCol; c.lineWidth=lw*.85; c.stroke();
+
+  // Rosy cheeks
+  [cx-r*.35, cx+r*.35].forEach(ex=>{
+    wobbleEllipse(c,ex,cy+r*.16,r*.16,r*.1,r*.01);
+    c.fillStyle=accentCol; c.globalAlpha=.22; c.fill(); c.globalAlpha=1;
+  });
+
+  c.restore();
+}
+
+// Cute whimsical BUNNY — tall floppy ears, round face, big eyes, cheek blush
+function drawCuteBunny(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+
+  // Tall floppy ears — slightly asymmetric
+  [[cx-r*.28, cy-r*1.08, -0.12],[cx+r*.3, cy-r*1.05, 0.1]].forEach(([ex,ey,tilt])=>{
+    c.beginPath();
+    c.moveTo(ex-r*.15+tilt*r, cy-r*.55);
+    c.bezierCurveTo(ex-r*.22,ey+r*.3, ex+tilt*r*.8,ey-r*.25, ex+r*.15+tilt*r,cy-r*.5);
+    c.quadraticCurveTo(ex+r*.05,cy-r*.4, ex-r*.15+tilt*r,cy-r*.55);
+    c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+    // inner ear
+    c.beginPath();
+    c.moveTo(ex-r*.06+tilt*r, cy-r*.58);
+    c.bezierCurveTo(ex-r*.1,ey+r*.3, ex+tilt*r*.5,ey-r*.1, ex+r*.07+tilt*r,cy-r*.54);
+    c.quadraticCurveTo(ex,cy-r*.45, ex-r*.06+tilt*r,cy-r*.58);
+    c.fillStyle=accentCol; c.globalAlpha=.38; c.fill(); c.globalAlpha=1;
+  });
+
+  // Head
+  wobbleCircle(c,cx,cy,r,r*.06);
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Big sparkly eyes
+  [cx-r*.27, cx+r*.27].forEach(ex=>{
+    wobbleCircle(c,ex,cy-r*.08,r*.14,r*.02);
+    c.fillStyle=accentCol; c.fill();
+    c.beginPath(); c.arc(ex-r*.05,cy-r*.14,r*.05,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,0.7)'; c.fill();
+    // tiny star shine
+    c.beginPath(); c.arc(ex+r*.06,cy-r*.04,r*.03,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,0.5)'; c.fill();
+  });
+
+  // Little Y-nose
+  c.lineWidth=lw*.7;
+  sketchLine(c, cx,cy+r*.08, cx,cy+r*.18);
+  sketchLine(c, cx,cy+r*.18, cx-r*.08,cy+r*.26);
+  sketchLine(c, cx,cy+r*.18, cx+r*.08,cy+r*.26);
+  c.strokeStyle=accentCol;
+
+  // Wobbly smile
+  c.beginPath(); c.moveTo(cx-r*.14,cy+r*.28);
+  c.quadraticCurveTo(cx,cy+r*.4, cx+r*.14,cy+r*.28);
+  c.strokeStyle=accentCol; c.lineWidth=lw*.8; c.stroke();
+
+  // Puffy cheeks
+  [cx-r*.36, cx+r*.36].forEach(ex=>{
+    wobbleEllipse(c,ex,cy+r*.2,r*.17,r*.11,r*.01);
+    c.fillStyle=accentCol; c.globalAlpha=.26; c.fill(); c.globalAlpha=1;
+  });
+
+  c.restore();
+}
+
+// Cute whimsical STAR character — wobbly 5-point star body with face
+function drawCuteStar(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+
+  // Wobbly 5-point star
+  c.beginPath();
+  for(let i=0;i<10;i++){
+    const a = (Math.PI/5)*i - Math.PI/2;
+    const jit = (i%2===0?r:r*.44) + Math.sin(i*1.7)*r*.04;
+    const x=cx+Math.cos(a)*jit, y=cy+Math.sin(a)*jit;
+    i===0?c.moveTo(x,y):c.quadraticCurveTo(
+      cx+Math.cos(a-.16)*(jit*.85), cy+Math.sin(a-.16)*(jit*.85),x,y
+    );
+  }
+  c.closePath();
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Crescent closed eyes (happy squint)
+  [cx-r*.22, cx+r*.22].forEach(ex=>{
+    c.beginPath(); c.arc(ex,cy-r*.05,r*.11,Math.PI+.2,0-.2,false);
+    c.strokeStyle=accentCol; c.lineWidth=lw*.9; c.stroke();
+    // lash
+    c.beginPath(); c.moveTo(ex+r*.07,cy-r*.13); c.lineTo(ex+r*.14,cy-r*.2); c.stroke();
+  });
+
+  // Tiny dot nose
+  c.beginPath(); c.arc(cx,cy+r*.12,r*.06,0,Math.PI*2);
+  c.fillStyle=accentCol; c.fill();
+
+  // Round happy mouth
+  c.beginPath(); c.arc(cx,cy+r*.2,r*.12,0.1,Math.PI-.1);
+  c.strokeStyle=accentCol; c.lineWidth=lw*.8; c.stroke();
+
+  // Rosy cheek circles
+  [cx-r*.32, cx+r*.32].forEach(ex=>{
+    wobbleCircle(c,ex,cy+r*.18,r*.1,r*.01);
+    c.fillStyle=accentCol; c.globalAlpha=.28; c.fill(); c.globalAlpha=1;
+  });
+
+  c.restore();
+}
+
+// Cute whimsical CHICK — round fluffy body, twig legs, beak, sparkle eyes
+function drawCuteChick(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+
+  // Fluffy body — slightly pear shaped
+  wobbleEllipse(c,cx,cy+r*.08,r*.9,r,r*.07);
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Head
+  wobbleCircle(c,cx,cy-r*.55,r*.62,r*.05);
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Little tuft on top — 3 wobbly spikes
+  [-r*.12, 0, r*.12].forEach((dx,i)=>{
+    c.beginPath();
+    c.moveTo(cx+dx-r*.06, cy-r*1.08);
+    c.quadraticCurveTo(cx+dx+r*.02, cy-r*(1.28+i*.04), cx+dx+r*.08, cy-r*1.06);
+    c.quadraticCurveTo(cx+dx+r*.02, cy-r*1.04, cx+dx-r*.06, cy-r*1.08);
+    c.fillStyle=accentCol; c.fill(); c.stroke();
+  });
+
+  // Eyes
+  [cx-r*.22, cx+r*.22].forEach(ex=>{
+    wobbleCircle(c,ex,cy-r*.58,r*.1,r*.01);
+    c.fillStyle=accentCol; c.fill();
+    c.beginPath(); c.arc(ex-r*.03,cy-r*.62,r*.04,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,0.65)'; c.fill();
+  });
+
+  // Diamond beak
+  c.beginPath();
+  c.moveTo(cx, cy-r*.46); c.lineTo(cx+r*.12,cy-r*.38); c.lineTo(cx,cy-r*.3); c.lineTo(cx-r*.12,cy-r*.38);
+  c.closePath(); c.fillStyle=accentCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw*.6; c.stroke();
+
+  // Wing hint
+  [cx-r*.55, cx+r*.55].forEach(ex=>{
+    wobbleEllipse(c,ex,cy+r*.15,r*.28,r*.18,r*.02);
+    c.fillStyle=accentCol; c.globalAlpha=.18; c.fill(); c.globalAlpha=1;
+    c.strokeStyle=accentCol; c.lineWidth=lw*.6; c.stroke();
+  });
+
+  // Rosy cheeks
+  [cx-r*.32, cx+r*.32].forEach(ex=>{
+    wobbleCircle(c,ex,cy-r*.48,r*.1,r*.01);
+    c.fillStyle=accentCol; c.globalAlpha=.28; c.fill(); c.globalAlpha=1;
+  });
+
+  c.restore();
+}
+
+// Cute whimsical FISH — plump body, big fan tail, huge eye, wavy fin
+function drawCuteFish(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+
+  // Tail fan — drawn before body so body overlaps
+  c.beginPath();
+  c.moveTo(cx+r*.55,cy);
+  c.bezierCurveTo(cx+r*1.1,cy-r*.7, cx+r*1.4,cy-r*.4, cx+r*1.3,cy);
+  c.bezierCurveTo(cx+r*1.4,cy+r*.4, cx+r*1.1,cy+r*.7, cx+r*.55,cy);
+  c.fillStyle=accentCol; c.globalAlpha=.7; c.fill(); c.globalAlpha=1;
+  c.strokeStyle=accentCol; c.lineWidth=lw*.8; c.stroke();
+  // tail stripes
+  c.lineWidth=lw*.4; c.strokeStyle=bodyCol;
+  [[cx+r*.9,cy-r*.25,cx+r*1.2,cy-r*.05],[cx+r*.85,cy+r*.2,cx+r*1.15,cy+r*.02]].forEach(([x1,y1,x2,y2])=>{
+    sketchLine(c,x1,y1,x2,y2);
+  });
+
+  // Plump body
+  wobbleEllipse(c,cx-r*.05,cy,r*.72,r*.55,r*.05);
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Dorsal fin — wavy triangle
+  c.beginPath();
+  c.moveTo(cx-r*.2,cy-r*.52);
+  c.bezierCurveTo(cx-r*.05,cy-r*.95, cx+r*.2,cy-r*.88, cx+r*.3,cy-r*.5);
+  c.quadraticCurveTo(cx+r*.08,cy-r*.56, cx-r*.2,cy-r*.52);
+  c.fillStyle=accentCol; c.globalAlpha=.6; c.fill(); c.globalAlpha=1;
+  c.strokeStyle=accentCol; c.lineWidth=lw*.7; c.stroke();
+
+  // Big wobbly eye
+  wobbleCircle(c,cx-r*.28,cy-r*.1,r*.22,r*.02);
+  c.fillStyle='#fff'; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+  wobbleCircle(c,cx-r*.28,cy-r*.1,r*.12,r*.01);
+  c.fillStyle=accentCol; c.fill();
+  c.beginPath(); c.arc(cx-r*.33,cy-r*.16,r*.05,0,Math.PI*2);
+  c.fillStyle='rgba(255,255,255,0.7)'; c.fill();
+
+  // Smile
+  c.beginPath(); c.arc(cx-r*.52,cy+r*.18,r*.14,0,Math.PI*.7);
+  c.strokeStyle=accentCol; c.lineWidth=lw*.8; c.stroke();
+
+  // Scales — 3 small circles
+  [[-r*.08,-r*.05],[r*.12,r*.06],[-r*.08,r*.22]].forEach(([dx,dy])=>{
+    wobbleCircle(c,cx+dx,cy+dy,r*.1,r*.01);
+    c.strokeStyle=accentCol; c.lineWidth=lw*.4; c.globalAlpha=.3; c.stroke(); c.globalAlpha=1;
+  });
+
+  c.restore();
+}
+
+// Cute whimsical ROBOT — rounded square head, wobbly antenna, pixel-ish screen face
+function drawCuteRobot(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+  const s=r*.82;
+
+  // Antenna — wobbly stick + wobbly ball
+  c.beginPath();
+  c.moveTo(cx+r*.06,cy-s);
+  c.bezierCurveTo(cx-r*.05,cy-s-r*.15, cx+r*.12,cy-s-r*.28, cx+r*.04,cy-s-r*.38);
+  c.strokeStyle=bodyCol; c.lineWidth=lw*.8; c.stroke();
+  wobbleCircle(c,cx+r*.04,cy-s-r*.48,r*.12,r*.02);
+  c.fillStyle=bodyCol; c.fill(); c.strokeStyle=bodyCol; c.lineWidth=lw*.6; c.stroke();
+
+  // Ear nubs
+  [cx-s, cx+s].forEach((ex,i)=>{
+    wobbleCircle(c,ex+(i===0?-r*.06:r*.06),cy,r*.16,r*.02);
+    c.fillStyle=accentCol; c.globalAlpha=.2; c.fill(); c.globalAlpha=1;
+    c.strokeStyle=bodyCol; c.lineWidth=lw*.7; c.stroke();
+  });
+
+  // Main head — wobbly rounded square
+  const rnd=s*.3;
+  c.beginPath();
+  c.moveTo(cx-s+rnd, cy-s);
+  c.bezierCurveTo(cx-s*.4+Math.sin(1)*r*.04, cy-s+r*.02, cx+s*.4+Math.cos(2)*r*.04, cy-s-r*.02, cx+s-rnd, cy-s);
+  c.quadraticCurveTo(cx+s+r*.03, cy-s, cx+s+r*.02, cy-s+rnd);
+  c.bezierCurveTo(cx+s+r*.03, cy-s*.3, cx+s-r*.02, cy+s*.3, cx+s+r*.02, cy+s-rnd);
+  c.quadraticCurveTo(cx+s, cy+s+r*.03, cx+s-rnd, cy+s);
+  c.bezierCurveTo(cx+s*.3, cy+s+r*.03, cx-s*.3, cy+s-r*.02, cx-s+rnd, cy+s);
+  c.quadraticCurveTo(cx-s-r*.02, cy+s, cx-s-r*.02, cy+s-rnd);
+  c.bezierCurveTo(cx-s, cy+s*.3, cx-s-r*.03, cy-s*.3, cx-s-r*.02, cy-s+rnd);
+  c.quadraticCurveTo(cx-s, cy-s, cx-s+rnd, cy-s);
+  c.fillStyle=accentCol; c.globalAlpha=.14; c.fill(); c.globalAlpha=1;
+  c.strokeStyle=bodyCol; c.lineWidth=lw; c.stroke();
+
+  // Inner screen
+  const ss=s*.62;
+  c.beginPath(); c.roundRect(cx-ss,cy-ss,ss*2,ss*2,ss*.2);
+  c.fillStyle=bodyCol; c.globalAlpha=.15; c.fill(); c.globalAlpha=1;
+  c.strokeStyle=bodyCol; c.lineWidth=lw*.6; c.stroke();
+
+  // Pixel block eyes — two little squares
+  [cx-s*.32, cx+s*.12].forEach((ex,i)=>{
+    const sz=r*.18;
+    c.beginPath(); c.roundRect(ex,cy-r*.22,sz,sz,sz*.25);
+    c.fillStyle=bodyCol; c.fill();
+    c.beginPath(); c.arc(ex+sz*.5,cy-r*.22+sz*.5,sz*.22,0,Math.PI*2);
+    c.fillStyle=accentCol; c.globalAlpha=.6; c.fill(); c.globalAlpha=1;
+  });
+
+  // Zigzag mouth — hand-drawn feel
+  c.beginPath();
+  const mxs=[cx-s*.3, cx-s*.1, cx+s*.1, cx+s*.3];
+  const mys=[cy+r*.2, cy+r*.35, cy+r*.18, cy+r*.3];
+  c.moveTo(mxs[0],mys[0]);
+  mxs.slice(1).forEach((x,i)=>c.lineTo(x,mys[i+1]));
+  c.strokeStyle=bodyCol; c.lineWidth=lw*.8; c.stroke();
+
+  c.restore();
+}
+
+// Cute whimsical MOON — crescent with a sleepy face, little stars
+function drawCuteMoon(c,cx,cy,r,bodyCol,accentCol){
+  c.save();
+  c.lineJoin='round'; c.lineCap='round';
+  const lw=Math.max(1.2,r*.09);
+
+  // Crescent: full circle minus offset circle
+  c.beginPath(); wobbleCircle(c,cx,cy,r,r*.05); c.fillStyle=bodyCol; c.fill(); c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+  // Cut away with accent (inner circle)
+  wobbleCircle(c,cx+r*.38,cy-r*.15,r*.72,r*.06);
+  c.fillStyle=accentCol; c.fill();
+
+  // Re-draw outer ring stroke so crescent has clean edge
+  wobbleCircle(c,cx,cy,r,r*.05);
+  c.strokeStyle=accentCol; c.lineWidth=lw; c.stroke();
+
+  // Face on the crescent bulge (left side)
+  // Sleepy eyes
+  [cx-r*.22, cx+r*.02].forEach((ex,i)=>{
+    const ey=cy+r*(i===0?-.05:.2);
+    c.beginPath(); c.arc(ex,ey,r*.1,Math.PI+.3,0-.3,false);
+    c.strokeStyle=accentCol; c.lineWidth=lw*.85; c.stroke();
+    // lash
+    c.beginPath(); c.moveTo(ex+r*.07,ey-r*.08); c.lineTo(ex+r*.13,ey-r*.15); c.stroke();
+  });
+
+  // Tiny nose dot
+  c.beginPath(); c.arc(cx-r*.1,cy+r*.32,r*.06,0,Math.PI*2);
+  c.fillStyle=accentCol; c.fill();
+
+  // Wobbly smile
+  c.beginPath(); c.moveTo(cx-r*.2,cy+r*.42);
+  c.bezierCurveTo(cx-r*.04,cy+r*.55, cx+r*.08,cy+r*.48, cx+r*.18,cy+r*.36);
+  c.strokeStyle=accentCol; c.lineWidth=lw*.8; c.stroke();
+
+  // Little stars scattered on crescent
+  [[cx-r*.55,cy+r*.1,'★'],[cx-r*.38,cy-r*.52,'✦'],[cx-r*.1,cy-r*.72,'·']].forEach(([sx,sy,glyph])=>{
+    c.font=`${Math.max(6,r*.28)}px serif`; c.textAlign='center'; c.textBaseline='middle';
+    c.fillStyle=accentCol; c.globalAlpha=.7; c.fillText(glyph,sx,sy); c.globalAlpha=1;
+  });
+
+  c.restore();
+}
+
+// Fill the 4 border strips
+function fillBorder(c,w,h,b){
+  c.fillRect(0,0,w,b); c.fillRect(0,h-b,w,b);
+  c.fillRect(0,b,b,h-b*2); c.fillRect(w-b,b,b,h-b*2);
+}
+
+// Draw emoji evenly spaced around border perimeter
+function drawBorderEmoji(c,w,h,b,set,size){
+  c.font=`${size}px serif`; c.textAlign='center'; c.textBaseline='middle';
+  const spacing=b*2.4;
+  const topN=Math.max(2,Math.floor(w/spacing));
+  const sideN=Math.max(2,Math.floor((h-b*2)/spacing));
+  let idx=0;
+  const e=()=>set[idx++%set.length];
+  for(let i=0;i<topN;i++) c.fillText(e(),(i+.5)*(w/topN),b*.45);
+  for(let i=0;i<topN;i++) c.fillText(e(),(i+.5)*(w/topN),h-b*.75);
+  for(let i=0;i<sideN;i++) c.fillText(e(),b*.5,b+(i+.5)*((h-b*2)/sideN));
+  for(let i=0;i<sideN;i++) c.fillText(e(),w-b*.5,b+(i+.5)*((h-b*2)/sideN));
+  c.textBaseline='alphabetic';
+}
+
+function drawWavyRect(c,x,y,w,h){
+  const amp=4, freq=20;
+  c.beginPath();
+  for(let i=0;i<=w;i+=2) c.lineTo(x+i,y+Math.sin(i/freq)*amp);
+  for(let i=0;i<=h;i+=2) c.lineTo(x+w+Math.sin(i/freq)*amp,y+i);
+  for(let i=w;i>=0;i-=2) c.lineTo(x+i,y+h-Math.sin(i/freq)*amp);
+  for(let i=h;i>=0;i-=2) c.lineTo(x-Math.sin(i/freq)*amp,y+i);
+  c.closePath(); c.stroke();
+}
+
+function roundRect(c,x,y,w,h,r,fill){
+  c.beginPath();
+  c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();c.fillStyle=fill;c.fill();
+}
+
+// ── FRAME STICKERS ────────────────────────────────────────────────────────────
+function clearFrameStickers(){
+  frameStickers.forEach(el=>el.remove());
+  frameStickers=[];
+}
+
+function placeFrameSticker(emoji){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  const pc=document.getElementById('photo-canvas');
+  const el=document.createElement('div');
+  el.className='placed-sticker frame-sticker';
+  el.textContent=emoji;
+  el.style.left=(pc.offsetWidth/2-18)+'px';
+  el.style.top=(pc.offsetHeight/2-18)+'px';
+  makeDraggable(el);
+  document.getElementById('sticker-layer').appendChild(el);
+  frameStickers.push(el);
+  toast('Drag to position!');
+}
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const FILTERS=[
+  {id:'none',  name:'Original',e:'🖼️',adj:{}},
+  {id:'glow',  name:'Glow',    e:'✨',adj:{brightness:8,contrast:8,saturation:12,glow:40}},
+  {id:'vivid', name:'Vivid',   e:'🌈',adj:{saturation:35,contrast:15,brightness:3}},
+  {id:'rosy',  name:'Rosy',    e:'🌸',adj:{warmth:25,saturation:10,brightness:8,fade:10}},
+  {id:'dreamy',name:'Dreamy',  e:'☁️',adj:{brightness:15,saturation:-10,fade:22,contrast:-8}},
+  {id:'golden',name:'Golden',  e:'🌅',adj:{warmth:45,saturation:15,brightness:4,contrast:8}},
+  {id:'ice',   name:'Ice',     e:'❄️',adj:{warmth:-35,saturation:8,brightness:4,contrast:12}},
+  {id:'drama', name:'Drama',   e:'🎭',adj:{contrast:30,saturation:10,brightness:-8,vignette:50}},
+  {id:'bw',    name:'B&W',     e:'🖤',adj:{saturation:-100,contrast:18}},
+  {id:'vinfilter',name:'Vintage',e:'📷',adj:{warmth:22,saturation:-25,fade:20,contrast:8}},
+  {id:'matte', name:'Matte',   e:'🤍',adj:{contrast:-18,brightness:12,fade:30,saturation:-8}},
+  {id:'kawaii',name:'Kawaii',  e:'🎀',adj:{brightness:18,saturation:22,warmth:15,glow:30,fade:8}},
+  {id:'peach', name:'Peachy',  e:'🍑',adj:{warmth:38,brightness:14,saturation:18,fade:14}},
+  {id:'fairy', name:'Fairy',   e:'🧚',adj:{brightness:22,saturation:14,glow:55,fade:16}},
+  {id:'moody', name:'Moody',   e:'🌙',adj:{brightness:-15,contrast:20,saturation:8,warmth:-10,vignette:35}},
+  {id:'lomo',  name:'Lomo',    e:'🎞️',adj:{contrast:25,saturation:25,vignette:60,warmth:12}},
+];
+const ADJUST_SLIDERS=[
+  {k:'brightness',label:'Brightness',min:-100,max:100},
+  {k:'contrast',  label:'Contrast',  min:-100,max:100},
+  {k:'saturation',label:'Color',     min:-100,max:100},
+  {k:'warmth',    label:'Warmth',    min:-100,max:100},
+  {k:'glow',      label:'Glow',      min:0,   max:100},
+  {k:'fade',      label:'Fade',      min:0,   max:100},
+  {k:'clarity',   label:'Clarity',   min:-50, max:50},
+];
+const FACE_SLIDERS=[
+  {k:'slim',     label:'Slim / Narrow Face', min:0,  max:100, section:'Shape'},
+  {k:'widen',    label:'Widen / Fuller Face',min:0,  max:100, section:'Shape'},
+  {k:'smooth',   label:'Smooth Skin',        min:0,  max:100, section:'Skin'},
+  {k:'glow',     label:'Skin Glow',          min:0,  max:100, section:'Skin'},
+  {k:'skinTone', label:'Skin Tone',          min:-50,max:50,  section:'Skin'},
+  {k:'whiten',   label:'Brighten Skin',      min:0,  max:100, section:'Skin'},
+  {k:'eyeBright',label:'Eye Brighten',       min:0,  max:100, section:'Eyes'},
+];
+const EFFECTS_SLIDERS=[
+  {k:'vignette',label:'Vignette', min:0,   max:100},
+  {k:'tint',    label:'Tint',     min:-100,max:100},
+];
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(id) {
+  if (currentTab === 'facetune') detachWarpBrush();
+  currentTab=id;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('t-'+id).classList.add('active');
+  renderTab(id);
+}
+function renderTab(id) {
+  const el=document.getElementById('tool-content');
+  if(id==='filters')  el.innerHTML=renderFilters();
+  else if(id==='adjust')   el.innerHTML=renderSliders(ADJUST_SLIDERS,adj,'adj');
+  else if(id==='facetune') el.innerHTML=renderFacetune();
+  else if(id==='effects')  el.innerHTML=renderSliders(EFFECTS_SLIDERS,adj,'adj');
+  else if(id==='frames')   el.innerHTML=renderFrames();
+  else if(id==='tools')    el.innerHTML=renderTools();
+  attachSliders();
+}
+function renderFilters(){
+  return`<div class="filter-grid">${FILTERS.map(f=>`<div class="filter-item ${activeFilter===f.id?'active':''}" onclick="applyFilter('${f.id}')"><div class="filter-preview">${f.e}</div><span class="filter-label">${f.name}</span></div>`).join('')}</div>`;
+}
+function renderSliders(defs,store,sk){
+  return`<div class="slider-section">${defs.map(s=>`<div class="slider-row"><div class="slider-header"><span class="slider-name">${s.label}</span><span class="slider-val" id="sv-${s.k}">${Math.round(store[s.k]||0)}</span></div><input type="range" min="${s.min}" max="${s.max}" value="${store[s.k]||0}" data-key="${s.k}" data-store="${sk}" class="adj-slider"></div>`).join('')}</div>`;
+}
+function renderFacetune(){
+  const slimV  = face.slim  || 0;
+  const widenV = face.widen || 0;
+  return `<div class="slider-section">
+    <div class="face-section-title">Shape — Paint to select, then adjust</div>
+
+    <div style="background:var(--blue-light);border:1.5px solid #93c5fd;border-radius:12px;padding:12px;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">
+        1. Choose what to do:
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <button onclick="setWarpMode('slim')" id="btn-slim"
+          style="padding:10px;border-radius:10px;border:2px solid ${warpMode==='slim'?'var(--blue)':'var(--border)'};background:${warpMode==='slim'?'var(--blue)':'#fff'};color:${warpMode==='slim'?'#fff':'var(--text)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+          ◀ Slim / Narrow
+        </button>
+        <button onclick="setWarpMode('widen')" id="btn-widen"
+          style="padding:10px;border-radius:10px;border:2px solid ${warpMode==='widen'?'var(--blue)':'var(--border)'};background:${warpMode==='widen'?'var(--blue)':'#fff'};color:${warpMode==='widen'?'#fff':'var(--text)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+          ▶ Widen / Fuller
+        </button>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">
+        2. Paint the area on your photo 👆
+      </div>
+      <div style="font-size:12px;color:var(--text-soft);margin-bottom:10px;line-height:1.5">
+        Brush over the face area you want to reshape. Painted area shows in blue.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <button onclick="startPainting()" id="btn-paint"
+          style="padding:10px;border-radius:10px;border:2px solid var(--blue);background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+          🖌 Paint Area
+        </button>
+        <button onclick="stopPainting()"
+          style="padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+          ✓ Done Painting
+        </button>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-soft);margin-bottom:4px">
+          <span>Brush Size</span><span id="sv-brushsize">${warpBrushSize}</span>
+        </div>
+        <input type="range" min="10" max="120" value="${warpBrushSize}"
+          oninput="warpBrushSize=parseInt(this.value);document.getElementById('sv-brushsize').textContent=this.value">
+      </div>
+
+      <button onclick="clearWarpMask();applyAll();renderTab('facetune')"
+        style="width:100%;padding:8px;background:#fff;border:1.5px solid #fca5a5;border-radius:8px;color:#dc2626;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:2px">
+        ✕ Clear Painted Area
+      </button>
+    </div>
+
+    <div style="margin-top:4px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">
+        <span>3. Adjust strength</span>
+      </div>
+      <div class="slider-row">
+        <div class="slider-header"><span class="slider-name">Slim Strength</span><span class="slider-val" id="sv-slim">${slimV}</span></div>
+        <input type="range" min="0" max="100" value="${slimV}" data-key="slim" data-store="face" class="adj-slider">
+      </div>
+      <div class="slider-row" style="margin-top:10px">
+        <div class="slider-header"><span class="slider-name">Widen Strength</span><span class="slider-val" id="sv-widen">${widenV}</span></div>
+        <input type="range" min="0" max="100" value="${widenV}" data-key="widen" data-store="face" class="adj-slider">
+      </div>
+    </div>
+
+    <div class="face-section-title" style="margin-top:14px">Skin</div>
+    ${['smooth','glow','skinTone','whiten'].map(k=>{
+      const s=FACE_SLIDERS.find(x=>x.k===k);
+      return `<div class="slider-row"><div class="slider-header"><span class="slider-name">${s.label}</span><span class="slider-val" id="sv-${k}">${Math.round(face[k]||0)}</span></div><input type="range" min="${s.min}" max="${s.max}" value="${face[k]||0}" data-key="${k}" data-store="face" class="adj-slider"></div>`;
+    }).join('')}
+
+    <div class="face-section-title" style="margin-top:8px">Eyes</div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-name">Eye Brighten</span><span class="slider-val" id="sv-eyeBright">${Math.round(face.eyeBright||0)}</span></div>
+      <input type="range" min="0" max="100" value="${face.eyeBright||0}" data-key="eyeBright" data-store="face" class="adj-slider">
+    </div>
+  </div>`;
+}
+
+function setWarpMode(mode) {
+  warpMode = mode;
+  renderTab('facetune');
+  attachSliders();
+}
+
+function startPainting() {
+  if (!origPixels) { toast('Upload a photo first!'); return; }
+  if (!warpMask) initWarpMask();
+  // Update overlay canvas size to match image
+  const oc = document.getElementById('warp-overlay');
+  if (oc) { oc.width=imgW; oc.height=imgH; }
+  attachWarpBrush();
+  toast('Paint over the face area 🖌');
+}
+
+function stopPainting() {
+  detachWarpBrush();
+  toast('Done! Adjust strength with the sliders');
+}
+function renderFrames(){
+  const stickerSet = (activeFrame!=='none' && FRAME_STICKER_SETS[activeFrame]) ? FRAME_STICKER_SETS[activeFrame] : ['🌸','✨','💖','🌟','🎀','🦋','🌈','💫'];
+  const stickerBtns = stickerSet.map(s=>`<div onclick="placeFrameSticker('${s}')" style="font-size:26px;text-align:center;padding:6px;border-radius:8px;background:var(--blue-light);border:1px solid var(--border);cursor:pointer;line-height:1">${s}</div>`).join('');
+  const clearBtn = frameStickers.length>0 ? `<button onclick="clearFrameStickers();toast('Cleared!')" style="margin-top:10px;width:100%;padding:8px;background:var(--blue-light);border:1.5px solid #93c5fd;border-radius:8px;color:var(--blue);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">✕ Remove Frame Stickers</button>` : '';
+  return `<div class="frames-grid">${FRAMES.map(f=>`
+    <div class="frame-item ${activeFrame===f.id?'active':''}" onclick="applyFrame('${f.id}')">
+      <div class="frame-preview">${f.thumb}</div>
+      <span class="frame-label">${f.name}</span>
+    </div>`).join('')}</div>
+    <div style="margin-top:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Tap to place · drag to move</div>
+      <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">${stickerBtns}</div>
+      ${clearBtn}
+    </div>`;
+}
+function renderTools(){
+  return`<div class="tools-panel">
+    <div class="tool-btn" onclick="doAutoEnhance()"><span class="t-icon">⚡</span><div><div class="t-title">Auto Enhance</div><div class="t-sub">Smart scene-adaptive boost</div></div></div>
+    <div class="tool-btn" onclick="doRemoveBg()"><span class="t-icon">✂️</span><div><div class="t-title">Remove Background</div><div class="t-sub">Works best on solid-colour backgrounds</div></div></div>
+    <div class="tool-btn" onclick="doPortraitBlur()"><span class="t-icon">💆</span><div><div class="t-title">Portrait Blur</div><div class="t-sub">Blur background, keep subject sharp</div></div></div>
+    <div class="tool-btn" onclick="toggleAnimePanel()" id="anime-toggle-btn"><span class="t-icon">🌸</span><div><div class="t-title">Anime / Ghibli</div><div class="t-sub">Painterly cel-shaded art style</div></div></div>
+    <div id="anime-panel" style="display:none;background:var(--blue-light);border:1.5px solid #93c5fd;border-radius:14px;padding:14px;margin-top:-4px">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">🌸 Anime / Ghibli Settings</div>
+      <div class="slider-row" style="margin-bottom:10px"><div class="slider-header"><span class="slider-name" style="font-size:13px">Smoothness</span><span class="slider-val" id="sv-anime-smooth">60</span></div><input type="range" min="0" max="100" value="60" id="sl-anime-smooth" oninput="document.getElementById('sv-anime-smooth').textContent=this.value"></div>
+      <div class="slider-row" style="margin-bottom:10px"><div class="slider-header"><span class="slider-name" style="font-size:13px">Edge Strength</span><span class="slider-val" id="sv-anime-edge">50</span></div><input type="range" min="0" max="100" value="50" id="sl-anime-edge" oninput="document.getElementById('sv-anime-edge').textContent=this.value"></div>
+      <div class="slider-row" style="margin-bottom:10px"><div class="slider-header"><span class="slider-name" style="font-size:13px">Colour Vibrancy</span><span class="slider-val" id="sv-anime-sat">70</span></div><input type="range" min="0" max="100" value="70" id="sl-anime-sat" oninput="document.getElementById('sv-anime-sat').textContent=this.value"></div>
+      <div class="slider-row" style="margin-bottom:10px"><div class="slider-header"><span class="slider-name" style="font-size:13px">Painterly Glow</span><span class="slider-val" id="sv-anime-glow">40</span></div><input type="range" min="0" max="100" value="40" id="sl-anime-glow" oninput="document.getElementById('sv-anime-glow').textContent=this.value"></div>
+      <div class="slider-row" style="margin-bottom:14px"><div class="slider-header"><span class="slider-name" style="font-size:13px">Cel Levels</span><span class="slider-val" id="sv-anime-levels">6</span></div><input type="range" min="3" max="12" value="6" id="sl-anime-levels" oninput="document.getElementById('sv-anime-levels').textContent=this.value"></div>
+      <button onclick="doAnime()" style="width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .15s">✨ Apply Anime Effect</button>
+      <button onclick="resetAnime()" style="width:100%;padding:9px;background:white;color:var(--blue);border:1.5px solid #93c5fd;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">↩ Undo Anime Effect</button>
+    </div>
+    <div class="tool-btn" onclick="doFlipH()"><span class="t-icon">↔️</span><div><div class="t-title">Flip Horizontal</div><div class="t-sub">Mirror left-right</div></div></div>
+    <div class="tool-btn" onclick="doFlipV()"><span class="t-icon">↕️</span><div><div class="t-title">Flip Vertical</div><div class="t-sub">Mirror top-bottom</div></div></div>
+    <div class="tool-btn" onclick="doRotate()"><span class="t-icon">🔄</span><div><div class="t-title">Rotate 90°</div><div class="t-sub">Rotate clockwise</div></div></div>
+    <div class="tool-btn" onclick="resetAll()"><span class="t-icon">↩️</span><div><div class="t-title">Reset All Edits</div><div class="t-sub">Start fresh from original</div></div></div>
+  </div>`;
+}
+function attachSliders(){
+  document.querySelectorAll('.adj-slider').forEach(inp=>{
+    inp.addEventListener('input',function(){
+      const k=this.dataset.key, st=this.dataset.store, v=parseFloat(this.value);
+      if(st==='face') face[k]=v; else adj[k]=v;
+      const lbl=document.getElementById('sv-'+k); if(lbl) lbl.textContent=Math.round(v);
+      applyAll();
+    });
+  });
+}
+function applyFilter(id){
+  const f=FILTERS.find(x=>x.id===id); if(!f) return;
+  activeFilter=id;
+  adj={brightness:0,contrast:0,saturation:0,warmth:0,glow:0,fade:0,vignette:0,tint:0,clarity:0};
+  Object.assign(adj,f.adj);
+  applyAll(); renderTab('filters'); toast(f.name+' applied');
+}
+function applyFrame(id){
+  activeFrame=id;
+  drawFrame(id);
+  renderTab('frames');
+  const f=FRAMES.find(x=>x.id===id);
+  toast(f && id!=='none' ? f.name+' ✨' : 'Frame removed');
+}
+
+// ── TOOLS ─────────────────────────────────────────────────────────────────────
+function doAutoEnhance(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  showLoading('Analysing photo...');
+  setTimeout(()=>{
+    const n=imgW*imgH; let sR=0,sG=0,sB=0,sL=0; const hist=new Int32Array(256);
+    for(let i=0;i<origPixels.length;i+=4){const r=origPixels[i],g=origPixels[i+1],b=origPixels[i+2];sR+=r;sG+=g;sB+=b;const l=Math.round(.299*r+.587*g+.114*b);sL+=l;hist[l]++;}
+    const aR=sR/n,aG=sG/n,aB=sB/n,aL=sL/n;
+    let lo=0,hi=255,acc=0; const clip=n*.01;
+    for(let i=0;i<256;i++){acc+=hist[i];if(acc>=clip){lo=i;break;}}
+    acc=0; for(let i=255;i>=0;i--){acc+=hist[i];if(acc>=clip){hi=i;break;}}
+    const range=hi-lo;
+    adj.brightness+=aL<90?Math.min(20,(90-aL)*.25):aL>165?Math.max(-12,(165-aL)*.18):0;
+    adj.contrast+=range<120?Math.min(16,(120-range)*.13):4;
+    adj.saturation+=Math.max(aR,aG,aB)-Math.min(aR,aG,aB)>80?-6:10;
+    adj.warmth+=-((aR-aB)*.1); adj.glow+=10; adj.clarity+=7;
+    face.smooth=Math.min(face.smooth+20,50);
+    hideLoading(); applyAll(); toast('Enhanced! ⚡');
+  },100);
+}
+function doRemoveBg(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  showLoading('Removing background...');
+  setTimeout(()=>{
+    const w=imgW,h=imgH,tmp=pCtx.getImageData(0,0,w,h),d=tmp.data;
+    const pts=[[0,0],[w-1,0],[0,h-1],[w-1,h-1],[w>>1,0],[0,h>>1]];
+    let bR=0,bG=0,bB=0;
+    pts.forEach(([x,y])=>{const i=(y*w+x)*4;bR+=d[i];bG+=d[i+1];bB+=d[i+2];});
+    bR/=pts.length;bG/=pts.length;bB/=pts.length;
+    for(let i=0;i<d.length;i+=4){const dr=d[i]-bR,dg=d[i+1]-bG,db=d[i+2]-bB,dist=Math.sqrt(dr*dr+dg*dg+db*db);if(dist<80)d[i+3]=Math.max(0,(255*(dist/80)-20)|0);}
+    pCtx.putImageData(tmp,0,0); hideLoading(); toast('Background removed ✂️');
+  },100);
+}
+function doPortraitBlur(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  showLoading('Blurring background...');
+  setTimeout(()=>{
+    const w=imgW,h=imgH,src=pCtx.getImageData(0,0,w,h),d=src.data,out=pCtx.createImageData(w,h);
+    const cx=w/2,cy=h*.38;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const dist=Math.sqrt((x-cx)**2*.45+(y-cy)**2),bs=Math.max(0,(dist-75)/140);
+      if(bs<.01){const si=(y*w+x)*4;out.data[si]=d[si];out.data[si+1]=d[si+1];out.data[si+2]=d[si+2];out.data[si+3]=255;}
+      else{const rx=Math.round((Math.random()-.5)*9*bs),ry=Math.round((Math.random()-.5)*9*bs),sx=Math.max(0,Math.min(w-1,x+rx)),sy=Math.max(0,Math.min(h-1,y+ry)),si=(sy*w+sx)*4,di=(y*w+x)*4;out.data[di]=d[si];out.data[di+1]=d[si+1];out.data[di+2]=d[si+2];out.data[di+3]=255;}
+    }
+    pCtx.putImageData(out,0,0); hideLoading(); toast('Portrait blur! 💆');
+  },100);
+}
+let preAnimePixels = null; // snapshot before anime so we can undo
+
+function toggleAnimePanel(){
+  const p=document.getElementById('anime-panel');
+  if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+}
+
+function resetAnime(){
+  if(!preAnimePixels){toast('No anime effect to undo');return;}
+  origPixels = preAnimePixels;
+  preAnimePixels = null;
+  applyAll();
+  toast('Anime effect undone ↩');
+}
+
+// ── ANIME / GHIBLI ENGINE ────────────────────────────────────────────────────
+// Pipeline:
+//  1. Bilateral-style smoothing  (skin/colour preservation, noise kill)
+//  2. Cel quantisation           (Ghibli paint-bucket palette)
+//  3. Warm luminosity grade      (Ghibli signature golden/soft palette shift)
+//  4. Painterly glow             (diffuse highlight bloom)
+//  5. Edge detection + ink lines (clean anime outlines, not noisy)
+//  6. Composite                  (ink on top of coloured base)
+
+function doAnime(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  showLoading('Painting your scene...');
+
+  // Save snapshot for undo
+  preAnimePixels = origPixels.slice();
+
+  // Read slider values
+  const smooth  = parseInt(document.getElementById('sl-anime-smooth')?.value  ?? 60);
+  const edgeStr = parseInt(document.getElementById('sl-anime-edge')?.value    ?? 50);
+  const satAmt  = parseInt(document.getElementById('sl-anime-sat')?.value     ?? 70);
+  const glowAmt = parseInt(document.getElementById('sl-anime-glow')?.value    ?? 40);
+  const levels  = parseInt(document.getElementById('sl-anime-levels')?.value  ?? 6);
+
+  setTimeout(()=>{
+    const w=imgW, h=imgH;
+
+    // ── STEP 1: Bilateral-style smoothing ─────────────────────────────────
+    // Approximate bilateral filter: for each pixel, average neighbours that
+    // are colour-close. This flattens noise/texture while keeping hard edges.
+    const src = origPixels.slice();
+    const smoothed = new Uint8ClampedArray(src.length);
+    const radius = Math.max(1, Math.round(smooth/100 * 4)); // 0–4px radius
+    const colourTol = 30 + smooth * 0.4; // how different a neighbour can be
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const ci=(y*w+x)*4;
+        let sumR=0,sumG=0,sumB=0,cnt=0;
+        const cr=src[ci],cg=src[ci+1],cb=src[ci+2];
+        for(let dy=-radius;dy<=radius;dy++){
+          for(let dx=-radius;dx<=radius;dx++){
+            const nx=Math.max(0,Math.min(w-1,x+dx));
+            const ny=Math.max(0,Math.min(h-1,y+dy));
+            const ni=(ny*w+nx)*4;
+            const dr=src[ni]-cr, dg=src[ni+1]-cg, db=src[ni+2]-cb;
+            const colDist=Math.sqrt(dr*dr+dg*dg+db*db);
+            if(colDist<colourTol){sumR+=src[ni];sumG+=src[ni+1];sumB+=src[ni+2];cnt++;}
+          }
+        }
+        smoothed[ci]  =sumR/cnt; smoothed[ci+1]=sumG/cnt;
+        smoothed[ci+2]=sumB/cnt; smoothed[ci+3]=255;
+      }
+    }
+
+    // ── STEP 2: Cel quantisation ──────────────────────────────────────────
+    // Convert to HSL, quantise luminance & saturation into `levels` bands,
+    // then convert back. This gives the flat colour-fill look of cel animation.
+    const celled = new Uint8ClampedArray(smoothed.length);
+    for(let i=0;i<smoothed.length;i+=4){
+      let r=smoothed[i]/255, g=smoothed[i+1]/255, b=smoothed[i+2]/255;
+      const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+      let hh=0, ss=0, ll=(mx+mn)/2;
+      if(mx!==mn){
+        const d=mx-mn; ss=ll>.5?d/(2-mx-mn):d/(mx+mn);
+        if(mx===r) hh=(g-b)/d+(g<b?6:0);
+        else if(mx===g) hh=(b-r)/d+2;
+        else hh=(r-g)/d+4;
+        hh/=6;
+      }
+      // Quantise luminance into `levels` bands
+      ll = Math.round(ll*(levels-1))/(levels-1);
+      // Boost saturation for vibrancy, then quantise
+      ss = Math.min(1, ss * (1 + satAmt/100));
+      ss = Math.round(ss*(levels-1))/(levels-1);
+      // Convert HSL back to RGB
+      let rr,gg,bb;
+      if(ss===0){ rr=gg=bb=ll; }
+      else{
+        const q=ll<.5?ll*(1+ss):ll+ss-ll*ss, p=2*ll-q;
+        rr=hueToRgb(p,q,hh+1/3); gg=hueToRgb(p,q,hh); bb=hueToRgb(p,q,hh-1/3);
+      }
+      celled[i]=clamp(rr*255); celled[i+1]=clamp(gg*255); celled[i+2]=clamp(bb*255); celled[i+3]=255;
+    }
+
+    // ── STEP 3: Ghibli colour grade ───────────────────────────────────────
+    // Warm teal-to-gold palette shift, lifted blacks, soft contrast
+    const graded = new Uint8ClampedArray(celled.length);
+    for(let i=0;i<celled.length;i+=4){
+      let r=celled[i], g=celled[i+1], b=celled[i+2];
+      // Gentle warm lift (Ghibli daylight feel)
+      r = r*0.95 + 12;
+      g = g*0.97 + 6;
+      b = b*0.92;
+      // Lift blacks slightly (airy Ghibli look)
+      r = r*(1-18/255)+18; g = g*(1-12/255)+12; b = b*(1-8/255)+8;
+      // Slight teal in shadows, gold in highlights
+      const lum=(r+g+b)/3;
+      if(lum<100){ b+=6*(1-lum/100); g+=3*(1-lum/100); } // teal shadows
+      if(lum>160){ r+=8*((lum-160)/95); g+=4*((lum-160)/95); } // warm highlights
+      graded[i]=clamp(r); graded[i+1]=clamp(g); graded[i+2]=clamp(b); graded[i+3]=255;
+    }
+
+    // ── STEP 4: Painterly glow ────────────────────────────────────────────
+    // Bloom: average bright pixels with their surroundings to diffuse light
+    const glowed = new Uint8ClampedArray(graded.length);
+    const gRadius = Math.round(glowAmt/100 * 3);
+    if(gRadius>0){
+      for(let y=0;y<h;y++){
+        for(let x=0;x<w;x++){
+          const ci=(y*w+x)*4;
+          const lum=(graded[ci]+graded[ci+1]+graded[ci+2])/3;
+          if(lum>140){
+            // Bright pixel: blend with box average
+            let sr=0,sg=0,sb=0,cnt=0;
+            for(let dy=-gRadius;dy<=gRadius;dy++){
+              for(let dx=-gRadius;dx<=gRadius;dx++){
+                const nx=Math.max(0,Math.min(w-1,x+dx));
+                const ny=Math.max(0,Math.min(h-1,y+dy));
+                const ni=(ny*w+nx)*4;
+                sr+=graded[ni];sg+=graded[ni+1];sb+=graded[ni+2];cnt++;
+              }
+            }
+            const t=(lum-140)/115*(glowAmt/100)*.5;
+            glowed[ci]  =clamp(graded[ci]  *(1-t)+(sr/cnt)*t);
+            glowed[ci+1]=clamp(graded[ci+1]*(1-t)+(sg/cnt)*t);
+            glowed[ci+2]=clamp(graded[ci+2]*(1-t)+(sb/cnt)*t);
+          } else {
+            glowed[ci]=graded[ci]; glowed[ci+1]=graded[ci+1]; glowed[ci+2]=graded[ci+2];
+          }
+          glowed[ci+3]=255;
+        }
+      }
+    } else {
+      glowed.set(graded);
+    }
+
+    // ── STEP 5: Edge detection (Sobel on original smoothed for clean edges) ─
+    const edgeThreshold = 20 + (100-edgeStr)*1.2; // lower edgeStr = more edges
+    const edges = new Uint8ClampedArray(w*h); // greyscale edge mask
+    for(let y=1;y<h-1;y++){
+      for(let x=1;x<w-1;x++){
+        const lum=i=>(smoothed[i]+smoothed[i+1]+smoothed[i+2])/3;
+        const tl=lum((y-1)*w*4+(x-1)*4), tc=lum((y-1)*w*4+x*4),     tr=lum((y-1)*w*4+(x+1)*4);
+        const ml=lum( y   *w*4+(x-1)*4),                              mr=lum( y   *w*4+(x+1)*4);
+        const bl=lum((y+1)*w*4+(x-1)*4), bc=lum((y+1)*w*4+x*4),     br=lum((y+1)*w*4+(x+1)*4);
+        const gx = -tl - 2*ml - bl + tr + 2*mr + br;
+        const gy = -tl - 2*tc - tr + bl + 2*bc + br;
+        const mag = Math.sqrt(gx*gx+gy*gy);
+        edges[y*w+x] = mag > edgeThreshold ? 255 : 0;
+      }
+    }
+
+    // ── STEP 6: Composite ─────────────────────────────────────────────────
+    // Write coloured base to origPixels, then darken edge pixels to ink black
+    const final = new Uint8ClampedArray(glowed);
+    const inkAlpha = 0.75 + edgeStr/100*0.2; // 0.75–0.95
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        if(edges[y*w+x]>0){
+          const i=(y*w+x)*4;
+          final[i]  = clamp(final[i]  *(1-inkAlpha));
+          final[i+1]= clamp(final[i+1]*(1-inkAlpha));
+          final[i+2]= clamp(final[i+2]*(1-inkAlpha));
+        }
+      }
+    }
+
+    // Write result back as the new origPixels so all other adjustments layer on top
+    origPixels = final;
+    applyAll();
+    hideLoading();
+    toast('Anime effect applied! 🌸');
+  }, 60);
+}
+
+function hueToRgb(p,q,t){
+  if(t<0)t+=1; if(t>1)t-=1;
+  if(t<1/6)return p+(q-p)*6*t;
+  if(t<1/2)return q;
+  if(t<2/3)return p+(q-p)*(2/3-t)*6;
+  return p;
+}
+function doFlipH(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  const w=imgW,h=imgH,tmp=new Uint8ClampedArray(origPixels.length);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const si=(y*w+(w-1-x))*4,di=(y*w+x)*4;tmp[di]=origPixels[si];tmp[di+1]=origPixels[si+1];tmp[di+2]=origPixels[si+2];tmp[di+3]=origPixels[si+3];}
+  origPixels=tmp; applyAll(); toast('Flipped ↔️');
+}
+function doFlipV(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  const w=imgW,h=imgH,tmp=new Uint8ClampedArray(origPixels.length);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const si=((h-1-y)*w+x)*4,di=(y*w+x)*4;tmp[di]=origPixels[si];tmp[di+1]=origPixels[si+1];tmp[di+2]=origPixels[si+2];tmp[di+3]=origPixels[si+3];}
+  origPixels=tmp; applyAll(); toast('Flipped ↕️');
+}
+function doRotate(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  const w=imgW,h=imgH,tmp=new Uint8ClampedArray(w*h*4);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const si=(y*w+x)*4,nx=h-1-y,ny=x,di=(ny*h+nx)*4;tmp[di]=origPixels[si];tmp[di+1]=origPixels[si+1];tmp[di+2]=origPixels[si+2];tmp[di+3]=origPixels[si+3];}
+  imgW=h; imgH=w;
+  photoCanvas.width=imgW; photoCanvas.height=imgH;
+  frameCanvas.width=imgW; frameCanvas.height=imgH;
+  photoCanvas.style.width='100%'; photoCanvas.style.height='auto';
+  document.getElementById('canvas-area').style.height='';
+  origPixels=tmp; applyAll(); toast('Rotated 🔄');
+}
+function resetAll(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  adj={brightness:0,contrast:0,saturation:0,warmth:0,glow:0,fade:0,vignette:0,tint:0,clarity:0};
+  face={slim:0,widen:0,smooth:0,glow:0,skinTone:0,whiten:0,eyeBright:0};
+  activeFilter='none'; activeFrame='none';
+  preAnimePixels=null;
+  clearWarpMask();
+  detachWarpBrush();
+  const oc=document.getElementById('warp-overlay');
+  if(oc){const c=oc.getContext('2d');c.clearRect(0,0,oc.width,oc.height);}
+  clearFrameStickers();
+  applyAll(); renderTab(currentTab); toast('Reset ↩️');
+}
+
+// ── SAVE ─────────────────────────────────────────────────────────────────────
+function downloadImage(){
+  if(!origPixels){toast('Upload a photo first!');return;}
+  const tmp=document.createElement('canvas');
+  tmp.width=imgW; tmp.height=imgH;
+  const tc=tmp.getContext('2d');
+  tc.drawImage(photoCanvas,0,0);
+  tc.drawImage(frameCanvas,0,0);
+  // Bake frame stickers
+  const area=document.getElementById('canvas-area');
+  const scX=imgW/photoCanvas.offsetWidth, scY=imgH/photoCanvas.offsetHeight;
+  frameStickers.forEach(el=>{
+    tc.font=`${36*Math.max(scX,scY)}px serif`;
+    tc.fillText(el.textContent, parseFloat(el.style.left||0)*scX, parseFloat(el.style.top||0)*scY+36*scY);
+  });
+  const a=document.createElement('a');
+  a.download='photomagic.png';
+  a.href=tmp.toDataURL('image/png');
+  a.click(); toast('Saved! 🎉');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function showLoading(msg){document.getElementById('loading-text').textContent=msg;document.getElementById('loading-overlay').style.display='flex';}
+function hideLoading(){document.getElementById('loading-overlay').style.display='none';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function newPhoto(){
+  document.getElementById('editor-screen').style.display='none';
+  document.getElementById('upload-screen').style.display='flex';
+  clearFrameStickers();
+  origPixels=null; imgW=0; imgH=0;
+  adj={brightness:0,contrast:0,saturation:0,warmth:0,glow:0,fade:0,vignette:0,tint:0,clarity:0};
+  face={slim:0,widen:0,smooth:0,glow:0,skinTone:0,whiten:0,eyeBright:0};
+  activeFilter='none'; activeFrame='none';
+  document.getElementById('file-input').value='';
+}
+
+// ── LOAD ─────────────────────────────────────────────────────────────────────
+function makeDraggable(el){
+  let ox,oy,sx,sy;
+  const getPos=()=>{
+    const pc=document.getElementById('photo-canvas');
+    if(!el.style.left||el.style.left===''){
+      el.style.left=(pc.offsetWidth/2-20)+'px';
+    }
+    if(!el.style.top||el.style.top===''){
+      el.style.top=(pc.offsetHeight/2-20)+'px';
+    }
+    return{ox:parseFloat(el.style.left)||0,oy:parseFloat(el.style.top)||0};
+  };
+  el.addEventListener('mousedown',e=>{
+    e.preventDefault();const p=getPos();ox=p.ox;oy=p.oy;sx=e.clientX;sy=e.clientY;
+    const mv=ev=>{el.style.left=(ox+ev.clientX-sx)+'px';el.style.top=(oy+ev.clientY-sy)+'px'};
+    const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up)};
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+  el.addEventListener('touchstart',e=>{
+    e.preventDefault();const t=e.touches[0];const p=getPos();ox=p.ox;oy=p.oy;sx=t.clientX;sy=t.clientY;
+    const mv=ev=>{const t2=ev.touches[0];el.style.left=(ox+t2.clientX-sx)+'px';el.style.top=(oy+t2.clientY-sy)+'px'};
+    const up=()=>{document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',up)};
+    document.addEventListener('touchmove',mv,{passive:false});document.addEventListener('touchend',up);
+  });
+}
+document.getElementById('file-input').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const img=new Image();
+  img.onload=()=>{
+    const maxW=1200,maxH=1600; let w=img.width,h=img.height;
+    if(w>maxW){h=h*maxW/w;w=maxW;} if(h>maxH){w=w*maxH/h;h=maxH;}
+    imgW=Math.round(w); imgH=Math.round(h);
+
+    photoCanvas.width=imgW; photoCanvas.height=imgH;
+    frameCanvas.width=imgW; frameCanvas.height=imgH;
+    // No fixed height — CSS scales canvas to fill container width naturally
+    photoCanvas.style.width='100%'; photoCanvas.style.height='auto';
+    frameCanvas.style.width='100%'; frameCanvas.style.height='100%';
+    document.getElementById('canvas-area').style.height='';
+    pCtx.drawImage(img,0,0,imgW,imgH);
+
+    // Frozen deep copy — completely decoupled from canvas
+    const id=pCtx.getImageData(0,0,imgW,imgH);
+    origPixels=new Uint8ClampedArray(id.data);
+
+    // Init warp mask and size overlay canvas
+    initWarpMask();
+    detachWarpBrush();
+    const oc=document.getElementById('warp-overlay');
+    if(oc){oc.width=imgW;oc.height=imgH;oc.getContext('2d').clearRect(0,0,imgW,imgH);}
+
+    document.getElementById('upload-screen').style.display='none';
+    document.getElementById('editor-screen').style.display='flex';
+    currentTab='filters'; renderTab('filters'); toast('Ready! ✨');
+  };
+  img.src=URL.createObjectURL(file);
+});
+</script>
+</body>
+</html>
